@@ -1,43 +1,48 @@
 package net.optionfactory.jetbrains.ansivault
 
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.module.ModuleManager
-import com.intellij.openapi.project.ProjectManager
-import com.intellij.openapi.roots.ModuleRootManager
-import com.intellij.platform.diagnostic.telemetry.impl.rootTask
+import com.intellij.openapi.project.Project
 import org.ini4j.Ini
 import java.io.File
-import kotlin.io.path.fileVisitor
-import kotlin.math.log
+import kotlin.io.path.Path
 
-class AnsibleVaultSecret {
+class AnsibleVaultSecret(val secret: String) {
 
     companion object {
-
-
-        fun search(): AnsibleVaultSecret {
+        fun search(project: Project): AnsibleVaultSecret {
             val logger = Logger.getInstance(AnsibleVaultSecret.Companion::class.java)
+            val secret = project.basePath?.let {
+                File(it).walk(FileWalkDirection.TOP_DOWN)
+                    .asSequence()
+                    .filter { file -> file.isFile }
+                    .filter { file -> file.name == "ansible.cfg" } //TODO: use also "ANSIBLE_CONFIG", ~/.ansible.cfg, /etc/ansible/ansible.cfg
+                    .map { file ->
+                        val ini = Ini(file).get("defaults")?.get("vault_password_file")
+                        val secret = ini?.let {
+                            val realPath =
+                                if (it.startsWith("~")) it.replaceFirst("~", System.getProperty("user.home")) else it
+                            Path(realPath).toFile().readLines()[0]
+                        }.orEmpty()
+                        return@map secret
+                    }
+                    .filter { it.isNotBlank() }
+                    .first()
 
-            val projects = ProjectManager.getInstance().openProjects;
-            projects
-                .flatMap { project ->
-                    ModuleManager.getInstance(project).modules.asSequence()
-                }
-                .flatMap { module ->
-                    ModuleRootManager.getInstance(module).contentRoots.asSequence()
-                }
-                .flatMap { root ->
-                    File(root.path).walk(FileWalkDirection.TOP_DOWN)
-                        .filter { file -> file.isFile }
-                        .filter { file -> file.name == "ansible.cfg" } //TODO: use also "ANSIBLE_CONFIG", ~/.ansible.cfg, /etc/ansible/ansible.cfg
-                        .asSequence()
-                }
-                .map { file ->
-                    val ini = Ini(file)
-                    ini
-                }
-            return AnsibleVaultSecret()
+            }
+            if (secret == null) {
+                throw NotImplementedError("TODO: implement fallback password lookup")
+            }
+            return AnsibleVaultSecret(secret)
         }
     }
+
+    fun encrypt(selectedText: String?): String {
+        if (selectedText == null) {
+            return ""
+        }
+        
+        return "Encrypt"
+    }
+
 
 }
