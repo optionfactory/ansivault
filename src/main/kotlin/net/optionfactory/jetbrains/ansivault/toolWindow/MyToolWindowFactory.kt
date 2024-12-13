@@ -1,4 +1,4 @@
-package com.github.grogdunn.ansivault.toolWindow
+package net.optionfactory.jetbrains.ansivault.toolWindow
 
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.thisLogger
@@ -8,8 +8,8 @@ import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.content.ContentFactory
-import com.github.grogdunn.ansivault.MyBundle
-import com.github.grogdunn.ansivault.services.MyProjectService
+import net.optionfactory.jetbrains.ansivault.MyBundle
+import net.optionfactory.jetbrains.ansivault.services.MyProjectService
 import javax.swing.JButton
 
 

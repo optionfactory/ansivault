@@ -1,4 +1,4 @@
-package com.github.grogdunn.ansivault.listeners
+package net.optionfactory.jetbrains.ansivault.listeners
 
 import com.intellij.openapi.application.ApplicationActivationListener
 import com.intellij.openapi.diagnostic.thisLogger
