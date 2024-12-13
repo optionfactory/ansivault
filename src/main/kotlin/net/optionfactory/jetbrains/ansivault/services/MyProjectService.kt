@@ -1,9 +1,9 @@
-package com.github.grogdunn.ansivault.services
+package net.optionfactory.jetbrains.ansivault.services
 
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.project.Project
-import com.github.grogdunn.ansivault.MyBundle
+import net.optionfactory.jetbrains.ansivault.MyBundle
 
 @Service(Service.Level.PROJECT)
 class MyProjectService(project: Project) {

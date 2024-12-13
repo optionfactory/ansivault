@@ -1,4 +1,4 @@
-package com.github.grogdunn.ansivault
+package net.optionfactory.jetbrains.ansivault
 
 import com.intellij.DynamicBundle
 import org.jetbrains.annotations.NonNls
