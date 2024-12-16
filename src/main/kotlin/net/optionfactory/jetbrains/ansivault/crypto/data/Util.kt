@@ -1,15 +1,13 @@
 package net.optionfactory.jetbrains.ansivault.crypto.data
 
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import com.intellij.openapi.diagnostic.Logger
+import net.optionfactory.jetbrains.ansivault.AnsibleVaultSecret
 
 object Util {
     private const val DEFAULT_LINE_LENGTH = 80
 
-    private val logger: Logger = LoggerFactory.getLogger(Util::class.java)
+    val logger = Logger.getInstance(AnsibleVaultSecret.Companion::class.java)
 
-    internal val hexArray: CharArray = "0123456789ABCDEF".toCharArray()
-    internal const val LINE_BREAK: String = "\n"
     internal const val CHAR_ENCODING: String = "UTF-8"
 
     @OptIn(ExperimentalStdlibApi::class)
@@ -33,7 +31,7 @@ object Util {
     }
 
     fun getVaultInfo(vaultData: String): VaultInfo {
-        val infoString = vaultData.substring(0, vaultData.indexOf(LINE_BREAK))
+        val infoString = vaultData.lines().first()
         return VaultInfo(infoString)
     }
 

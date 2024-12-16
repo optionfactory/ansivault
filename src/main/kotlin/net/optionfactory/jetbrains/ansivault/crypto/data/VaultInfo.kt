@@ -1,13 +1,12 @@
 package net.optionfactory.jetbrains.ansivault.crypto.data
 
+import com.intellij.openapi.diagnostic.Logger
 import net.optionfactory.jetbrains.ansivault.crypto.decoders.CypherFactory
 import net.optionfactory.jetbrains.ansivault.crypto.decoders.CypherInterface
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 class VaultInfo
     (infoLine: String) {
-    var logger: Logger = LoggerFactory.getLogger(VaultInfo::class.java)
+    var logger: Logger = Logger.getInstance(VaultInfo::class.java)
 
     var isEncryptedVault: Boolean = false
         private set

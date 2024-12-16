@@ -1,13 +1,12 @@
 package net.optionfactory.jetbrains.ansivault.crypto.data
 
+import com.intellij.openapi.diagnostic.Logger
 import net.optionfactory.jetbrains.ansivault.crypto.data.Util.hexit
 import net.optionfactory.jetbrains.ansivault.crypto.data.Util.unhex
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.io.IOException
 
 class VaultContent {
-    var logger: Logger = LoggerFactory.getLogger(VaultContent::class.java)
+    var logger: Logger = Logger.getInstance(VaultContent::class.java)
 
     val salt: ByteArray?
     val hmac: ByteArray?

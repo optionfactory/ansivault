@@ -1,10 +1,9 @@
 package net.optionfactory.jetbrains.ansivault.crypto.decoders
 
+import com.intellij.openapi.diagnostic.Logger
 import net.optionfactory.jetbrains.ansivault.crypto.data.Util.hexit
 import net.optionfactory.jetbrains.ansivault.crypto.data.VaultContent
 import net.optionfactory.jetbrains.ansivault.crypto.data.VaultInfo
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.io.OutputStream
 import java.util.*
@@ -14,7 +13,7 @@ import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
 class CypherAES256 : CypherInterface {
-    var logger: Logger = LoggerFactory.getLogger(CypherAES256::class.java)
+    var logger: Logger = Logger.getInstance(CypherAES256::class.java)
 
     private fun hasValidAESProvider(): Boolean {
         var canCrypt = false
@@ -25,12 +24,11 @@ class CypherAES256 : CypherInterface {
                 canCrypt = true
             } else {
                 logger.warn(
-                    "JRE doesn't support {} keylength for {}\nInstall unrestricted policy files from:\n{}",
-                    AES_KEYLEN, CYPHER_KEY_ALGO, JDK8_UPF_URL
+                    "JRE doesn't support $AES_KEYLEN keylength for $CYPHER_KEY_ALGO\nInstall unrestricted policy files from:\n$JDK8_UPF_URL"
                 )
             }
         } catch (ex: Exception) {
-            logger.warn("Failed to check for proper cypher algorithms: {}", ex.message)
+            logger.warn("Failed to check for proper cypher algorithms", ex)
         }
         return canCrypt
     }
