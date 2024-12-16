@@ -1,8 +1,8 @@
 package net.optionfactory.jetbrains.ansivault.crypto.data
 
 import com.intellij.openapi.diagnostic.Logger
-import net.optionfactory.jetbrains.ansivault.crypto.data.Util.hexit
-import net.optionfactory.jetbrains.ansivault.crypto.data.Util.unhex
+import net.optionfactory.jetbrains.ansivault.crypto.data.HexMarshaller.encode
+import net.optionfactory.jetbrains.ansivault.crypto.data.HexMarshaller.decode
 import java.io.IOException
 
 class VaultContent {
@@ -14,9 +14,9 @@ class VaultContent {
 
     constructor(encryptedVault: ByteArray) {
         val vaultContents = splitData(encryptedVault)
-        salt = unhex(String(vaultContents[0]!!, charset(CHAR_ENCODING)))
-        hmac = unhex(String(vaultContents[1]!!, charset(CHAR_ENCODING)))
-        data = unhex(String(vaultContents[2]!!, charset(CHAR_ENCODING)))
+        salt = decode(String(vaultContents[0]!!, charset(CHAR_ENCODING)))
+        hmac = decode(String(vaultContents[1]!!, charset(CHAR_ENCODING)))
+        data = decode(String(vaultContents[2]!!, charset(CHAR_ENCODING)))
     }
 
     constructor(salt: ByteArray?, hmac: ByteArray?, data: ByteArray) {
@@ -34,11 +34,11 @@ class VaultContent {
             "Salt: {} - HMAC: {} - Data: {} - TargetLen: {}",
             salt!!.size, hmac!!.size, data.size, (salt.size + hmac.size + data.size) * 2
         )
-        val saltString = hexit(salt)
+        val saltString = encode(salt)
         logger.debug("Salt String Length: {}", saltString.length)
-        val hmacString = hexit(hmac)
+        val hmacString = encode(hmac)
         logger.debug("HMAC String Length: {}", hmacString.length)
-        val dataString = hexit(data, -1)
+        val dataString = encode(data, -1)
         logger.debug("DATA String Length: {}", dataString.length)
         val complete = """
             $saltString
@@ -46,7 +46,7 @@ class VaultContent {
             $dataString
             """.trimIndent()
         logger.debug("Complete: {} \n{}", complete.length, complete)
-        val result = hexit(complete.toByteArray(), 80)
+        val result = encode(complete.toByteArray(), 80)
         logger.debug("Result: [{}] {}\n{}", complete.length * 2, result.length, result)
         return result
     }

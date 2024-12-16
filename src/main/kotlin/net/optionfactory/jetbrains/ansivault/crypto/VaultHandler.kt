@@ -1,7 +1,7 @@
 package net.optionfactory.jetbrains.ansivault.crypto
 
-import net.optionfactory.jetbrains.ansivault.crypto.data.Util.getVaultData
-import net.optionfactory.jetbrains.ansivault.crypto.data.Util.getVaultInfo
+import net.optionfactory.jetbrains.ansivault.crypto.data.VaultInfo
+import net.optionfactory.jetbrains.ansivault.crypto.data.VaultRawContent
 import net.optionfactory.jetbrains.ansivault.crypto.decoders.CypherAES256
 import net.optionfactory.jetbrains.ansivault.crypto.decoders.CypherFactory
 import org.apache.commons.io.IOUtils
@@ -40,7 +40,7 @@ object VaultHandler {
 
     @Throws(IOException::class)
     fun decrypt(encrypted: ByteArray, password: String?): ByteArray? {
-        val vaultInfo = getVaultInfo(encrypted)
+        val vaultInfo = VaultInfo.fromVaultData(encrypted)
         if (!vaultInfo.isEncryptedVault) {
             throw IOException("File is not an Ansible Encrypted Vault")
         }
@@ -49,7 +49,7 @@ object VaultHandler {
             throw IOException("The vault is not a format we can handle - check the cypher.")
         }
 
-        val encryptedData = getVaultData(encrypted)
+        val encryptedData = VaultRawContent.getVaultData(encrypted)
 
         return vaultInfo.cypher.decrypt(encryptedData, password)
     }

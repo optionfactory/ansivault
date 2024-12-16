@@ -4,8 +4,7 @@ import com.intellij.openapi.diagnostic.Logger
 import net.optionfactory.jetbrains.ansivault.crypto.decoders.CypherFactory
 import net.optionfactory.jetbrains.ansivault.crypto.decoders.CypherInterface
 
-class VaultInfo
-    (infoLine: String) {
+class VaultInfo(infoLine: String) {
     var logger: Logger = Logger.getInstance(VaultInfo::class.java)
 
     var isEncryptedVault: Boolean = false
@@ -47,6 +46,10 @@ class VaultInfo
         fun vaultInfoForCypher(vaultCypher: String): String {
             val infoLine = VAULT_MAGIC + ";" + VAULT_VERSION + ";" + vaultCypher
             return infoLine
+        }
+
+        fun fromVaultData(data: ByteArray): VaultInfo {
+            return VaultInfo(String(data).lines().first())
         }
     }
 }

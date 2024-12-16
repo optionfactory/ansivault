@@ -1,7 +1,7 @@
 package net.optionfactory.jetbrains.ansivault.crypto.decoders
 
 import com.intellij.openapi.diagnostic.Logger
-import net.optionfactory.jetbrains.ansivault.crypto.data.Util.hexit
+import net.optionfactory.jetbrains.ansivault.crypto.data.HexMarshaller.encode
 import net.optionfactory.jetbrains.ansivault.crypto.data.VaultContent
 import net.optionfactory.jetbrains.ansivault.crypto.data.VaultInfo
 import java.io.IOException
@@ -132,26 +132,26 @@ class CypherAES256 : CypherInterface {
         val salt = vaultContent.salt
         val hmac = vaultContent.hmac
         val cypher = vaultContent.data
-        logger.debug("Salt: {} - {}", salt!!.size, hexit(salt, 100))
-        logger.debug("HMAC: {} - {}", hmac!!.size, hexit(hmac, 100))
-        logger.debug("Data: {} - {}", cypher!!.size, hexit(cypher, 100))
+        logger.debug("Salt: {} - {}", salt!!.size, encode(salt, 100))
+        logger.debug("HMAC: {} - {}", hmac!!.size, encode(hmac, 100))
+        logger.debug("Data: {} - {}", cypher!!.size, encode(cypher, 100))
 
         val keys = EncryptionKeychain(salt, password, KEYLEN, IVLEN, ITERATIONS, KEYGEN_ALGO)
 
         val cypherKey = keys.encryptionKey
         logger.debug(
-            "Key 1: {} - {}", cypherKey!!.size, hexit(
+            "Key 1: {} - {}", cypherKey!!.size, encode(
                 cypherKey, 100
             )
         )
         val hmacKey = keys.hmacKey
         logger.debug(
-            "Key 2: {} - {}", hmacKey!!.size, hexit(
+            "Key 2: {} - {}", hmacKey!!.size, encode(
                 hmacKey, 100
             )
         )
         val iv = keys.iv
-        logger.debug("IV: {} - {}", iv!!.size, hexit(iv, 100))
+        logger.debug("IV: {} - {}", iv!!.size, encode(iv, 100))
 
         if (verifyHMAC(hmac, hmacKey, cypher)) {
             logger.debug("Signature matches - decrypting")
@@ -184,18 +184,18 @@ class CypherAES256 : CypherInterface {
         val keys = EncryptionKeychain(SALT_LENGTH, password, KEYLEN, IVLEN, ITERATIONS, KEYGEN_ALGO)
         val cypherKey = keys.encryptionKey
         logger.debug(
-            "Key 1: {} - {}", cypherKey!!.size, hexit(
+            "Key 1: {} - {}", cypherKey!!.size, encode(
                 cypherKey, 100
             )
         )
         val hmacKey = keys.hmacKey
         logger.debug(
-            "Key 2: {} - {}", hmacKey!!.size, hexit(
+            "Key 2: {} - {}", hmacKey!!.size, encode(
                 hmacKey, 100
             )
         )
         val iv = keys.iv
-        logger.debug("IV: {} - {}", iv!!.size, hexit(iv, 100))
+        logger.debug("IV: {} - {}", iv!!.size, encode(iv, 100))
         logger.debug("Original data length: {}", data.size)
         data = pad(data)!!
         logger.debug("Padded data length: {}", data.size)
