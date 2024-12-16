@@ -49,6 +49,10 @@ dependencies {
         testFramework(TestFrameworkType.Platform)
     }
     implementation(group = "org.jetbrains.intellij.deps", name = "ini4j", version = "0.5.5-2")
+    implementation(group = "de.rtner", name = "PBKDF2", version = "1.1.4"){
+        exclude("org.jboss.logging")
+        exclude("org.picketbox")
+    }
 }
 
 // Configure IntelliJ Platform Gradle Plugin - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-extension.html

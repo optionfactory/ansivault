@@ -2,6 +2,7 @@ package net.optionfactory.jetbrains.ansivault
 
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import net.optionfactory.jetbrains.ansivault.crypto.VaultHandler
 import org.ini4j.Ini
 import java.io.File
 import kotlin.io.path.Path
@@ -40,8 +41,15 @@ class AnsibleVaultSecret(val secret: String) {
         if (selectedText == null) {
             return ""
         }
-        
-        return "Encrypt"
+
+        return String(VaultHandler.encrypt(selectedText.toByteArray(), secret))
+    }
+
+    fun decrypt(selectedText: String?): String {
+        if (selectedText == null) {
+            return ""
+        }
+        return String(VaultHandler.decrypt(selectedText.toByteArray(), secret)!!)
     }
 
 
