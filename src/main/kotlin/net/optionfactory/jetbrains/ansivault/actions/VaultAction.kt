@@ -9,6 +9,7 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.CaretModel
 import com.intellij.openapi.editor.Editor
 import net.optionfactory.jetbrains.ansivault.AnsibleVaultSecret
+import net.optionfactory.jetbrains.ansivault.crypto.data.VaultInfo
 
 
 class VaultAction : AnAction() {
@@ -23,14 +24,21 @@ class VaultAction : AnAction() {
         val caretModel: CaretModel = editor.caretModel
         val selectedText = caretModel.currentCaret.selectedText
         logger.warn("SomeAction selectedText %s".format(selectedText))
-        val encrypt = ansibleVaultSecret.encrypt(selectedText)
+
+        val result = if(VaultInfo(selectedText.orEmpty()).isEncryptedVault) {
+            logger.warn("Decrypting")
+            ansibleVaultSecret.decrypt(selectedText)
+        } else {
+            logger.warn("Encrypting")
+            ansibleVaultSecret.encrypt(selectedText)
+        }
 
         val primaryCaret = editor.caretModel.primaryCaret
         val start = primaryCaret.selectionStart
         val end = primaryCaret.selectionEnd
         WriteCommandAction.runWriteCommandAction(project)
         {
-            document!!.replaceString(start, end, encrypt)
+            document!!.replaceString(start, end, result)
         }
     }
 }

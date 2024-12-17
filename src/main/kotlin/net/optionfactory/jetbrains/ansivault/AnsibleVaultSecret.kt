@@ -23,15 +23,14 @@ class AnsibleVaultSecret(val secret: String) {
                     .asSequence()
                     .filter { file -> file.isFile }
                     .filter { file -> file.name == "ansible.cfg" }
+                    .map { file -> file.toPath() }
                     .first()
             }
-            val homeConfig =
-                Path(System.getProperty("user.home")).resolve("ansible.cfg")
-                    .first { it.exists() && it.isRegularFile() }?.toFile()
-            val systemConfig =
-                Path("/etc/ansible/ansible.cfg")
-                    .first { it.exists() && it.isRegularFile() }?.toFile()
+            val homeConfig = Path(System.getProperty("user.home")).resolve("ansible.cfg")
+            val systemConfig = Path("/etc/ansible/ansible.cfg")
             val secret = listOfNotNull(projectConfig, homeConfig, systemConfig)
+                .filter { it.exists() && it.isRegularFile() }
+                .map { it.toFile() }
                 .map { file ->
                     val ini = Ini(file).get("defaults")?.get("vault_password_file")
                     val secret = ini?.let {

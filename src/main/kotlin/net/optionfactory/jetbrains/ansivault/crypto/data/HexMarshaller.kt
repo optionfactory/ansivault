@@ -12,7 +12,7 @@ object HexMarshaller {
 
     @OptIn(ExperimentalStdlibApi::class)
     fun decode(encoded: String): ByteArray {
-        return encoded.hexToByteArray()
+        return encoded.trimIndent().replace("\n", "").hexToByteArray()
     }
 
     fun encode(clear: ByteArray): String {
