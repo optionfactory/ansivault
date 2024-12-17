@@ -14,6 +14,7 @@ import net.optionfactory.jetbrains.ansivault.crypto.data.VaultInfo
 
 class VaultAction : AnAction() {
     val logger = Logger.getInstance(VaultAction::class.java)
+
     override fun actionPerformed(event: AnActionEvent) {
         logger.warn("SomeAction performed %s".format(event))
         val document = event.getData(PlatformDataKeys.EDITOR)?.document
@@ -24,21 +25,30 @@ class VaultAction : AnAction() {
         val caretModel: CaretModel = editor.caretModel
         val selectedText = caretModel.currentCaret.selectedText
         logger.warn("SomeAction selectedText %s".format(selectedText))
-
-        val result = if(VaultInfo(selectedText.orEmpty()).isEncryptedVault) {
-            logger.warn("Decrypting")
-            ansibleVaultSecret.decrypt(selectedText)
-        } else {
-            logger.warn("Encrypting")
-            ansibleVaultSecret.encrypt(selectedText)
+        selectedText.let {
+            val text = it!!
+            val result = if (text.startsWith(VAULT_MAGIC)) {
+                val ansibleVault = text.lines().drop(1).joinToString("\n").trimIndent()
+                if (!VaultInfo(ansibleVault).isEncryptedVault) {
+                    return
+                }
+                logger.warn("Decrypting")
+                ansibleVaultSecret.decrypt(ansibleVault)
+            } else {
+                logger.warn("Encrypting")
+                "%s%s".format(VAULT_MAGIC, ansibleVaultSecret.encrypt(selectedText))
+            }
+            val primaryCaret = editor.caretModel.primaryCaret
+            val start = primaryCaret.selectionStart
+            val end = primaryCaret.selectionEnd
+            WriteCommandAction.runWriteCommandAction(project)
+            {
+                document!!.replaceString(start, end, result)
+            }
         }
+    }
 
-        val primaryCaret = editor.caretModel.primaryCaret
-        val start = primaryCaret.selectionStart
-        val end = primaryCaret.selectionEnd
-        WriteCommandAction.runWriteCommandAction(project)
-        {
-            document!!.replaceString(start, end, result)
-        }
+    companion object {
+        const val VAULT_MAGIC = "!vault |\n"
     }
 }
