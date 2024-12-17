@@ -25,6 +25,7 @@ class VaultAction : AnAction() {
         val caretModel: CaretModel = editor.caretModel
         val selectedText = caretModel.currentCaret.selectedText
         logger.warn("SomeAction selectedText %s".format(selectedText))
+        val indentSize = caretModel.currentCaret.selectionStartPosition.column
         selectedText.let {
             val text = it!!
             val result = if (text.startsWith(VAULT_MAGIC)) {
@@ -36,7 +37,7 @@ class VaultAction : AnAction() {
                 ansibleVaultSecret.decrypt(ansibleVault)
             } else {
                 logger.warn("Encrypting")
-                "%s%s".format(VAULT_MAGIC, ansibleVaultSecret.encrypt(selectedText))
+                "%s%s".format(VAULT_MAGIC, ansibleVaultSecret.encrypt(selectedText, indentSize))
             }
             val primaryCaret = editor.caretModel.primaryCaret
             val start = primaryCaret.selectionStart

@@ -49,11 +49,16 @@ class AnsibleVaultSecret(val secret: String) {
         }
     }
 
-    fun encrypt(selectedText: String?): String {
+    fun encrypt(selectedText: String?, indent: Int = 0): String {
         if (selectedText == null) {
             return ""
         }
-        return String(VaultHandler.encrypt(selectedText.toByteArray(), secret))
+        val indentation = "".padStart(indent)
+        val encryptedText = String(VaultHandler.encrypt(selectedText.toByteArray(), secret))
+        return encryptedText.lines()
+            .map { indentation + it }
+            .joinToString("\n")
+
     }
 
     fun decrypt(selectedText: String?): String {
