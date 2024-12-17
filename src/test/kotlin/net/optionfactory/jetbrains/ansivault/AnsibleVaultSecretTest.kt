@@ -24,7 +24,7 @@ class AnsibleVaultSecretTest {
         var clearText = "Lorem ipsum dolor sit amet"
         var password = "secret"
         val instance = AnsibleVaultSecret(password)
-        val encrypt = instance.encrypt(clearText)
+        val encrypt = instance.encrypt(text = clearText)
         println("Encrypt '$encrypt'")
         val decrypted = instance.decrypt(encrypt)
         Assert.assertEquals(clearText, decrypted)
