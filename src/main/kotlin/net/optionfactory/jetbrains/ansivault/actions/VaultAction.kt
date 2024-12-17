@@ -8,6 +8,7 @@ import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.CaretModel
 import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.editor.VisualPosition
 import net.optionfactory.jetbrains.ansivault.AnsibleVaultSecret
 import net.optionfactory.jetbrains.ansivault.crypto.data.VaultInfo
 
@@ -27,18 +28,25 @@ class VaultAction : AnAction() {
         logger.warn("SomeAction selectedText %s".format(selectedText))
         val indentSize = caretModel.currentCaret.selectionStartPosition.column
         selectedText.let {
-            val text = it!!
-            val result = if (text.startsWith(VAULT_MAGIC)) {
-                val ansibleVault = text.lines().drop(1).joinToString("\n").trimIndent()
-                if (!VaultInfo(ansibleVault).isEncryptedVault) {
-                    return
-                }
+            var text = it!!
+
+            if (text.startsWith(INLINE_VAULT)) {
+                text = text.lines().drop(1).joinToString("\n").trimIndent()
+            }
+
+            val result = if (VaultInfo(text).isEncryptedVault) {
                 logger.warn("Decrypting")
-                ansibleVaultSecret.decrypt(ansibleVault)
+                ansibleVaultSecret.decrypt(text)
             } else {
                 logger.warn("Encrypting")
-                "%s%s".format(VAULT_MAGIC, ansibleVaultSecret.encrypt(selectedText, indentSize))
+                val encrypted = ansibleVaultSecret.encrypt(selectedText, indentSize)
+                if(caretModel.currentCaret.selectionStartPosition == VisualPosition(0,0)) {
+                    encrypted
+                } else {
+                    "%s%s".format(INLINE_VAULT, encrypted)
+                }
             }
+
             val primaryCaret = editor.caretModel.primaryCaret
             val start = primaryCaret.selectionStart
             val end = primaryCaret.selectionEnd
@@ -50,6 +58,6 @@ class VaultAction : AnAction() {
     }
 
     companion object {
-        const val VAULT_MAGIC = "!vault |\n"
+        const val INLINE_VAULT = "!vault |\n"
     }
 }
