@@ -1,8 +1,12 @@
 package net.optionfactory.jetbrains.ansivault
 
+import com.intellij.credentialStore.CredentialAttributes
+import com.intellij.credentialStore.generateServiceName
+import com.intellij.ide.passwordSafe.PasswordSafe
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import net.optionfactory.jetbrains.ansivault.crypto.VaultHandler
+import net.optionfactory.jetbrains.ansivault.ui.DialogBox
 import org.ini4j.Ini
 import java.io.File
 import kotlin.io.path.Path
@@ -24,7 +28,7 @@ class AnsibleVaultSecret(val secret: String) {
                     .filter { file -> file.isFile }
                     .filter { file -> file.name == "ansible.cfg" }
                     .map { file -> file.toPath() }
-                    .first()
+                    .firstOrNull()
             }
             val homeConfig = Path(System.getProperty("user.home")).resolve("ansible.cfg")
             val systemConfig = Path("/etc/ansible/ansible.cfg")
@@ -40,12 +44,17 @@ class AnsibleVaultSecret(val secret: String) {
                     }
                     return@map secret
                 }
-                .first()
+                .firstOrNull()
 
-            if (secret == null) {
-                throw NotImplementedError("TODO: Open a popup to take the password")
+            if (secret != null) {
+                return AnsibleVaultSecret(secret)
             }
-            return AnsibleVaultSecret(secret)
+
+            val credentialAttributes = CredentialAttributes(generateServiceName("AnsibleVaultSecret", "TODO"))
+            PasswordSafe.instance.set(credentialAttributes, null)
+            DialogBox().showAndGet()
+            val secretFromBox = String(PasswordSafe.instance.get(credentialAttributes)!!.password!!.toByteArray())
+            return AnsibleVaultSecret(secretFromBox)
         }
     }
 
