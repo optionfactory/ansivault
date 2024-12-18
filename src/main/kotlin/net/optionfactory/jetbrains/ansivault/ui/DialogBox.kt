@@ -1,17 +1,14 @@
 package net.optionfactory.jetbrains.ansivault.ui
 
-import com.intellij.credentialStore.CredentialAttributes
-import com.intellij.credentialStore.Credentials
-import com.intellij.credentialStore.generateServiceName
-import com.intellij.ide.passwordSafe.PasswordSafe
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.ui.ValidationInfo
+import net.optionfactory.jetbrains.ansivault.configuration.CredentialManager
 import java.awt.BorderLayout
 import java.awt.Component
 import javax.swing.*
 
-class DialogBox(): DialogWrapper(true) {
+class DialogBox() : DialogWrapper(true) {
     val logger = Logger.getInstance(DialogWrapper::class.java)
 
     private lateinit var pass: JPasswordField
@@ -54,11 +51,7 @@ class DialogBox(): DialogWrapper(true) {
             logger.warn("Ok action is not enabled")
             return
         }
-
-        val credentialAttributes = CredentialAttributes(generateServiceName("AnsibleVaultSecret", "TODO"))
-        val credentials = Credentials("vault-secret", pass.password)
-
-        PasswordSafe.instance.set(credentialAttributes, credentials)
+        CredentialManager.setCredential(String(pass.password))
         close(OK_EXIT_CODE)
     }
 }

@@ -1,10 +1,8 @@
 package net.optionfactory.jetbrains.ansivault
 
-import com.intellij.credentialStore.CredentialAttributes
-import com.intellij.credentialStore.generateServiceName
-import com.intellij.ide.passwordSafe.PasswordSafe
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import net.optionfactory.jetbrains.ansivault.configuration.CredentialManager
 import net.optionfactory.jetbrains.ansivault.crypto.VaultHandler
 import net.optionfactory.jetbrains.ansivault.ui.DialogBox
 import org.ini4j.Ini
@@ -50,10 +48,12 @@ class AnsibleVaultSecret(val secret: String) {
                 return AnsibleVaultSecret(secret)
             }
 
-            val credentialAttributes = CredentialAttributes(generateServiceName("AnsibleVaultSecret", "TODO"))
-            PasswordSafe.instance.set(credentialAttributes, null)
-            DialogBox().showAndGet()
-            val secretFromBox = String(PasswordSafe.instance.get(credentialAttributes)!!.password!!.toByteArray())
+            val maybeCredential = CredentialManager.getCredential()
+            if (maybeCredential == null) {
+                DialogBox().showAndGet()
+            }
+
+            val secretFromBox = String(CredentialManager.getCredential()!!.password!!.toByteArray())
             return AnsibleVaultSecret(secretFromBox)
         }
     }

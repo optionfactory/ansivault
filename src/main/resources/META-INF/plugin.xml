@@ -7,26 +7,24 @@
     <depends>com.intellij.modules.platform</depends>
 
     <resource-bundle>messages.MyBundle</resource-bundle>
-
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow factoryClass="net.optionfactory.jetbrains.ansivault.toolWindow.MyToolWindowFactory"
-                    id="MyToolWindow"/>
+        <projectConfigurable
+                parentId="tools"
+                instance="net.optionfactory.jetbrains.ansivault.configuration.ProjectConfigurable"
+                id="net.optionfactory.jetbrains.ansivault.configuration.ProjectConfigurable"
+                displayName="Ansivault Configuration"
+        />
     </extensions>
-
-    <applicationListeners>
-        <listener class="net.optionfactory.jetbrains.ansivault.listeners.MyApplicationActivationListener"
-                  topic="com.intellij.openapi.application.ApplicationActivationListener"/>
-    </applicationListeners>
     <actions>
         <group id="AnsiVault">
             <add-to-group group-id="ToolsMenu" anchor="first"/>
         </group>
-
 
         <action id="Ansivault.Vault"
                 class="net.optionfactory.jetbrains.ansivault.actions.VaultAction"
                 text="Ansible Encrypt">
             <add-to-group group-id="AnsiVault" anchor="first"/>
         </action>
+
     </actions>
 </idea-plugin>
