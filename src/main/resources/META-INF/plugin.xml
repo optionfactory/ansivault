@@ -21,7 +21,8 @@
 
         <action id="Ansivault.Vault"
                 class="net.optionfactory.jetbrains.ansivault.actions.VaultAction"
-                text="Ansible Encrypt">
+                text="Ansible Encrypt"
+                icon="/icons/icon.svg">
             <add-to-group group-id="AnsiVault" anchor="first"/>
         </action>
 
