@@ -5,6 +5,9 @@
     <vendor>OptionFactory</vendor>
 
     <depends>com.intellij.modules.platform</depends>
+    <description>
+        Easy Vault and Unvault ansible secret file and YML properties
+    </description>
 
     <extensions defaultExtensionNs="com.intellij">
         <projectConfigurable
