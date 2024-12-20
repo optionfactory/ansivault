@@ -6,7 +6,7 @@
 
 
 <!-- Plugin description -->
-
+Easy Vault and Unvault ansible secret file and YML properties
 <!-- Plugin description end -->
 
 ## Installation
