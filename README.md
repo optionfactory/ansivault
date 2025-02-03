@@ -6,7 +6,13 @@
 
 
 <!-- Plugin description -->
-Easy Vault and Unvault ansible secret file and YML properties
+Easy Vault and Unvault ansible secret file and YML properties. This plugin search for vault password in that order:
+1. System property `ANSIBLE_CONFIG`
+2. `ansible.cfg` file containing the path of vault password file (`[default]` -> `vault_password_file` property) in current project path. This is made to support a project structure like `<root>/infrastructure/ansible/ansible.cfg`
+3. `$HOME/ansible.cfg`
+4. `/etc/ansible/ansible.cfg`
+5. Fallback with user prompt. In that case the password is saved on secure credential store, and can be deleted in Settings.
+
 <!-- Plugin description end -->
 
 ## Installation
