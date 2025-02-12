@@ -19,7 +19,7 @@ object VaultHandler {
     @Throws(IOException::class)
     fun encrypt(cleartext: ByteArray, password: String?, cypher: String = DEFAULT_CYPHER): ByteArray {
         val cypherInstance = CypherFactory.getCypher(cypher)
-        val vaultData = cypherInstance!!.encrypt(cleartext, password)
+        val vaultData = cypherInstance.encrypt(cleartext, password)
         val vaultDataString = String(vaultData!!)
         val vaultPackage = "${cypherInstance.infoLine()}\n$vaultDataString"
         return vaultPackage.toByteArray()
