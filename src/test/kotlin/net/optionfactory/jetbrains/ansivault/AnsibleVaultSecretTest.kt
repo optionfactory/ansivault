@@ -14,15 +14,15 @@ class AnsibleVaultSecretTest {
           3661393166313461300a303462623633623866636433346135373132626335393533333766386139
           3730
       """.trimIndent()
-        var password = "secret"
+        val password = "secret"
         val got = AnsibleVaultSecret(password).decrypt(vaulted)
         Assert.assertEquals("TEST", got)
     }
 
     @Test
     fun `can encrypt and decrypt a message`() {
-        var clearText = "Lorem ipsum dolor sit amet"
-        var password = "secret"
+        val clearText = "Lorem ipsum dolor sit amet"
+        val password = "secret"
         val instance = AnsibleVaultSecret(password)
         val encrypt = instance.encrypt(text = clearText)
         println("Encrypt '$encrypt'")
