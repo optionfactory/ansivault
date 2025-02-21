@@ -30,7 +30,7 @@ class VaultInfo(infoLine: String) {
         get() = CypherFactory.getCypher(vaultCypher!!)
 
     fun isValidVault(): Boolean {
-        return isEncryptedVault && cypher != null
+        return isEncryptedVault
     }
 
     companion object {

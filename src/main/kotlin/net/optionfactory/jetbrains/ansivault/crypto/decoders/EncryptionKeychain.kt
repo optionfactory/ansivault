@@ -7,7 +7,7 @@ import java.util.*
 
 class EncryptionKeychain {
     private val password: String?
-    val salt: ByteArray?
+    val salt: ByteArray
     private val keylen: Int
     private val ivlen: Int
     private val iterations: Int
@@ -21,7 +21,7 @@ class EncryptionKeychain {
         private set
 
 
-    constructor(salt: ByteArray?, password: String?, keylen: Int, ivlen: Int, iterations: Int, algo: String) {
+    constructor(salt: ByteArray, password: String, keylen: Int, ivlen: Int, iterations: Int, algo: String) {
         this.password = password
         this.salt = salt
         this.keylen = keylen
@@ -62,7 +62,7 @@ class EncryptionKeychain {
     }
 
 
-    fun getEncryptionKey(keys: ByteArray): ByteArray {
+    private fun getEncryptionKey(keys: ByteArray): ByteArray {
         val result = Arrays.copyOfRange(keys, 0, keylen)
         return result
     }

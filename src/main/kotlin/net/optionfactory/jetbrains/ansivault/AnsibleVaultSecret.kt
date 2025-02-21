@@ -74,7 +74,7 @@ class AnsibleVaultSecret(val secret: String) {
         if (selectedText == null) {
             return ""
         }
-        return String(VaultHandler.decrypt(selectedText.toByteArray(), secret)!!)
+        return String(VaultHandler.decrypt(selectedText.toByteArray(), secret))
     }
 
 

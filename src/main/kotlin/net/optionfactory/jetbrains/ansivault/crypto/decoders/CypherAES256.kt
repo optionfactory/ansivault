@@ -13,7 +13,7 @@ import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
 class CypherAES256 : CypherInterface {
-    var logger: Logger = Logger.getInstance(CypherAES256::class.java)
+    private var logger: Logger = Logger.getInstance(CypherAES256::class.java)
 
     private fun hasValidAESProvider(): Boolean {
         var canCrypt = false
@@ -34,8 +34,8 @@ class CypherAES256 : CypherInterface {
     }
 
     @Throws(IOException::class)
-    fun calculateHMAC(key: ByteArray, data: ByteArray?): ByteArray? {
-        var computedMac: ByteArray? = null
+    fun calculateHMAC(key: ByteArray, data: ByteArray): ByteArray {
+        val computedMac: ByteArray
 
         try {
             val hmacKey = SecretKeySpec(key, KEYGEN_ALGO)
@@ -50,14 +50,13 @@ class CypherAES256 : CypherInterface {
     }
 
     @Throws(IOException::class)
-    fun verifyHMAC(hmac: ByteArray?, key: ByteArray, data: ByteArray?): Boolean {
-        val matches = false
+    fun verifyHMAC(hmac: ByteArray?, key: ByteArray, data: ByteArray): Boolean {
         val calculated = calculateHMAC(key, data)
         return hmac.contentEquals(calculated)
     }
 
-    fun paddingLength(decrypted: ByteArray): Int {
-        if (decrypted.size == 0) {
+    private fun paddingLength(decrypted: ByteArray): Int {
+        if (decrypted.isEmpty()) {
             logger.debug("Empty decoded text has no padding.")
             return 0
         }
@@ -66,25 +65,25 @@ class CypherAES256 : CypherInterface {
         return decrypted[decrypted.size - 1].toInt()
     }
 
-    fun unpad(decrypted: ByteArray): ByteArray {
+    private fun unpad(decrypted: ByteArray): ByteArray {
         val length = decrypted.size - paddingLength(decrypted)
         return Arrays.copyOfRange(decrypted, 0, length)
     }
 
     @Throws(IOException::class)
-    fun pad(cleartext: ByteArray): ByteArray? {
-        var padded: ByteArray? = null
+    fun pad(cleartext: ByteArray): ByteArray {
+        val padded: ByteArray?
 
         try {
             val blockSize = Cipher.getInstance(CYPHER_ALGO).blockSize
             logger.debug("Padding to block size: {}", blockSize)
-            var padding_length = (blockSize - (cleartext.size % blockSize))
-            if (padding_length == 0) {
-                padding_length = blockSize
+            var paddingLength = (blockSize - (cleartext.size % blockSize))
+            if (paddingLength == 0) {
+                paddingLength = blockSize
             }
-            padded = cleartext.plus(ByteArray(padding_length) { padding_length.toByte() })
+            padded = cleartext.plus(ByteArray(paddingLength) { paddingLength.toByte() })
         } catch (ex: Exception) {
-            IOException("Error calculating padding for " + CYPHER_ALGO + ": " + ex.message)
+            throw IOException("Error calculating padding for " + CYPHER_ALGO + ": " + ex.message)
         }
 
         return padded
@@ -120,7 +119,7 @@ class CypherAES256 : CypherInterface {
 
     @Throws(IOException::class)
     override fun decrypt(encryptedData: ByteArray, password: String): ByteArray {
-        var decrypted: ByteArray? = null
+        val decrypted: ByteArray?
 
         if (!hasValidAESProvider()) {
             throw IOException("Missing valid AES256 provider - install unrestricted policy profiles.")
@@ -139,18 +138,18 @@ class CypherAES256 : CypherInterface {
 
         val cypherKey = keys.encryptionKey
         logger.debug(
-            "Key 1: {} - {}", cypherKey!!.size, encode(
+            "Key 1: {} - {}", cypherKey.size, encode(
                 cypherKey, 100
             )
         )
         val hmacKey = keys.hmacKey
         logger.debug(
-            "Key 2: {} - {}", hmacKey!!.size, encode(
+            "Key 2: {} - {}", hmacKey.size, encode(
                 hmacKey, 100
             )
         )
         val iv = keys.iv
-        logger.debug("IV: {} - {}", iv!!.size, encode(iv, 100))
+        logger.debug("IV: {} - {}", iv.size, encode(iv, 100))
 
         if (verifyHMAC(hmac, hmacKey, cypher)) {
             logger.debug("Signature matches - decrypting")
@@ -179,26 +178,25 @@ class CypherAES256 : CypherInterface {
 
     @Throws(IOException::class)
     override fun encrypt(data: ByteArray, password: String): ByteArray {
-        var data = data
         val keys = EncryptionKeychain(SALT_LENGTH, password, KEYLEN, IVLEN, ITERATIONS, KEYGEN_ALGO)
         val cypherKey = keys.encryptionKey
         logger.debug(
-            "Key 1: {} - {}", cypherKey!!.size, encode(
+            "Key 1: {} - {}", cypherKey.size, encode(
                 cypherKey, 100
             )
         )
         val hmacKey = keys.hmacKey
         logger.debug(
-            "Key 2: {} - {}", hmacKey!!.size, encode(
+            "Key 2: {} - {}", hmacKey.size, encode(
                 hmacKey, 100
             )
         )
         val iv = keys.iv
-        logger.debug("IV: {} - {}", iv!!.size, encode(iv, 100))
+        logger.debug("IV: {} - {}", iv.size, encode(iv, 100))
         logger.debug("Original data length: {}", data.size)
-        data = pad(data)!!
-        logger.debug("Padded data length: {}", data.size)
-        val encrypted = encryptAES(data, keys.encryptionKey, keys.iv)
+        val padded = pad(data)
+        logger.debug("Padded data length: {}", padded.size)
+        val encrypted = encryptAES(padded, keys.encryptionKey, keys.iv)
         val hmacHash = calculateHMAC(keys.hmacKey, encrypted)
         val vaultContent = VaultContent(keys.salt, hmacHash, encrypted)
         return vaultContent.toByteArray()
@@ -212,7 +210,7 @@ class CypherAES256 : CypherInterface {
         const val CYPHER_KEY_ALGO: String = "AES"
         const val CYPHER_ALGO: String = "AES/CTR/NoPadding"
         private const val JDK8_UPF_URL =
-            "http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html"
+            "https://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html"
 
         private const val SALT_LENGTH = 32
         const val KEYLEN: Int = 32

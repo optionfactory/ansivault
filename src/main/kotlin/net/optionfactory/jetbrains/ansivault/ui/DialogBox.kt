@@ -19,7 +19,7 @@ class DialogBox() : DialogWrapper(true) {
         init()
     }
 
-    override fun createCenterPanel(): JComponent? {
+    override fun createCenterPanel(): JComponent {
         val dialogPanel = JPanel()
         val boxLayout = BoxLayout(dialogPanel, BoxLayout.Y_AXIS)
 

@@ -11,7 +11,7 @@ class CypherAES : CypherInterface {
     }
 
     @Throws(IOException::class)
-    override fun decrypt(data: ByteArray, password: String): ByteArray {
+    override fun decrypt(encryptedData: ByteArray, password: String): ByteArray {
         throw IOException(CYPHER_ID + " is not implemented.")
     }
 
@@ -26,7 +26,7 @@ class CypherAES : CypherInterface {
     }
 
     override fun infoLine(): String {
-        return VaultInfo.Companion.vaultInfoForCypher(CYPHER_ID)
+        return VaultInfo.vaultInfoForCypher(CYPHER_ID)
     }
 
     companion object {

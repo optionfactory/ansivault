@@ -8,8 +8,8 @@ import java.io.IOException
 class VaultContent {
     var logger: Logger = Logger.getInstance(VaultContent::class.java)
 
-    val salt: ByteArray?
-    val hmac: ByteArray?
+    val salt: ByteArray
+    val hmac: ByteArray
     val data: ByteArray
 
     constructor(encryptedVault: ByteArray) {
@@ -19,7 +19,7 @@ class VaultContent {
         data = decode(String(vaultContents[2]!!, charset(CHAR_ENCODING)))
     }
 
-    constructor(salt: ByteArray?, hmac: ByteArray?, data: ByteArray) {
+    constructor(salt: ByteArray, hmac: ByteArray, data: ByteArray) {
         this.salt = salt
         this.hmac = hmac
         this.data = data
@@ -32,7 +32,7 @@ class VaultContent {
     override fun toString(): String {
         logger.debug(
             "Salt: {} - HMAC: {} - Data: {} - TargetLen: {}",
-            salt!!.size, hmac!!.size, data.size, (salt.size + hmac.size + data.size) * 2
+            salt.size, hmac.size, data.size, (salt.size + hmac.size + data.size) * 2
         )
         val saltString = encode(salt)
         logger.debug("Salt String Length: {}", saltString.length)

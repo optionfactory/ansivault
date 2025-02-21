@@ -1,14 +1,11 @@
 package net.optionfactory.jetbrains.ansivault.crypto.data
 
 import com.intellij.openapi.diagnostic.Logger
-import net.optionfactory.jetbrains.ansivault.AnsibleVaultSecret
 
 object HexMarshaller {
     private const val DEFAULT_LINE_LENGTH = 80
 
     val logger = Logger.getInstance(HexMarshaller::class.java)
-
-    internal const val CHAR_ENCODING: String = "UTF-8"
 
     @OptIn(ExperimentalStdlibApi::class)
     fun decode(encoded: String): ByteArray {
