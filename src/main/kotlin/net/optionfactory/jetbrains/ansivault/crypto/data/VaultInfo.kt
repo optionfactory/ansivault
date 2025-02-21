@@ -5,7 +5,7 @@ import net.optionfactory.jetbrains.ansivault.crypto.decoders.CypherFactory
 import net.optionfactory.jetbrains.ansivault.crypto.decoders.CypherInterface
 
 class VaultInfo(infoLine: String) {
-    var logger: Logger = Logger.getInstance(VaultInfo::class.java)
+    private var logger: Logger = Logger.getInstance(VaultInfo::class.java)
 
     var isEncryptedVault: Boolean = false
         private set
@@ -44,7 +44,7 @@ class VaultInfo(infoLine: String) {
         const val VAULT_VERSION: String = "1.1"
 
         fun vaultInfoForCypher(vaultCypher: String): String {
-            val infoLine = VAULT_MAGIC + ";" + VAULT_VERSION + ";" + vaultCypher
+            val infoLine = "$VAULT_MAGIC;$VAULT_VERSION;$vaultCypher"
             return infoLine
         }
 

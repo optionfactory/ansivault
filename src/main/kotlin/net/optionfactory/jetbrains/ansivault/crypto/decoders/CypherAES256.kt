@@ -119,7 +119,7 @@ class CypherAES256 : CypherInterface {
     }
 
     @Throws(IOException::class)
-    override fun decrypt(encryptedData: ByteArray, password: String?): ByteArray? {
+    override fun decrypt(encryptedData: ByteArray, password: String): ByteArray {
         var decrypted: ByteArray? = null
 
         if (!hasValidAESProvider()) {
@@ -133,7 +133,7 @@ class CypherAES256 : CypherInterface {
         val cypher = vaultContent.data
         logger.debug("Salt: {} - {}", salt!!.size, encode(salt, 100))
         logger.debug("HMAC: {} - {}", hmac!!.size, encode(hmac, 100))
-        logger.debug("Data: {} - {}", cypher!!.size, encode(cypher, 100))
+        logger.debug("Data: {} - {}", cypher.size, encode(cypher, 100))
 
         val keys = EncryptionKeychain(salt, password, KEYLEN, IVLEN, ITERATIONS, KEYGEN_ALGO)
 
@@ -164,21 +164,21 @@ class CypherAES256 : CypherInterface {
     }
 
     @Throws(IOException::class)
-    override fun decrypt(decodedStream: OutputStream, encryptedData: ByteArray, password: String?) {
-        decodedStream.write(decrypt(encryptedData, password))
+    override fun decrypt(decodedStream: OutputStream, data: ByteArray, password: String) {
+        decodedStream.write(decrypt(data, password))
     }
 
     @Throws(IOException::class)
-    override fun encrypt(encodedStream: OutputStream, data: ByteArray, password: String?) {
+    override fun encrypt(encodedStream: OutputStream, data: ByteArray, password: String) {
         encodedStream.write(encrypt(data, password))
     }
 
     override fun infoLine(): String {
-        return VaultInfo.Companion.vaultInfoForCypher(CYPHER_ID)
+        return VaultInfo.vaultInfoForCypher(CYPHER_ID)
     }
 
     @Throws(IOException::class)
-    override fun encrypt(data: ByteArray, password: String?): ByteArray? {
+    override fun encrypt(data: ByteArray, password: String): ByteArray {
         var data = data
         val keys = EncryptionKeychain(SALT_LENGTH, password, KEYLEN, IVLEN, ITERATIONS, KEYGEN_ALGO)
         val cypherKey = keys.encryptionKey

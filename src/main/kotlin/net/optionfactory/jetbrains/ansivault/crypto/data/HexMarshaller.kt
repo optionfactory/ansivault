@@ -6,7 +6,7 @@ import net.optionfactory.jetbrains.ansivault.AnsibleVaultSecret
 object HexMarshaller {
     private const val DEFAULT_LINE_LENGTH = 80
 
-    val logger = Logger.getInstance(AnsibleVaultSecret.Companion::class.java)
+    val logger = Logger.getInstance(HexMarshaller::class.java)
 
     internal const val CHAR_ENCODING: String = "UTF-8"
 
@@ -29,6 +29,5 @@ object HexMarshaller {
         }
         return clear.toHexString(format)
     }
-
 
 }

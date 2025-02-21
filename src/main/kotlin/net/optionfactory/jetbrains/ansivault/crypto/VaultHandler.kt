@@ -17,7 +17,7 @@ object VaultHandler {
 
     @JvmOverloads
     @Throws(IOException::class)
-    fun encrypt(cleartext: ByteArray, password: String?, cypher: String = DEFAULT_CYPHER): ByteArray {
+    fun encrypt(cleartext: ByteArray, password: String, cypher: String = DEFAULT_CYPHER): ByteArray {
         val cypherInstance = CypherFactory.getCypher(cypher)
         val vaultData = cypherInstance.encrypt(cleartext, password)
         val vaultDataString = String(vaultData!!)
@@ -27,19 +27,19 @@ object VaultHandler {
 
     @JvmOverloads
     @Throws(IOException::class)
-    fun encrypt(clearText: InputStream, cipherText: OutputStream, password: String?, cypher: String = DEFAULT_CYPHER) {
+    fun encrypt(clearText: InputStream, cipherText: OutputStream, password: String, cypher: String = DEFAULT_CYPHER) {
         val clearTextValue = IOUtils.toString(clearText, CHAR_ENCODING)
         cipherText.write(encrypt(clearTextValue.toByteArray(), password, cypher))
     }
 
     @Throws(IOException::class)
-    fun decrypt(encryptedVault: InputStream, decryptedVault: OutputStream, password: String?) {
+    fun decrypt(encryptedVault: InputStream, decryptedVault: OutputStream, password: String) {
         val encryptedValue = IOUtils.toString(encryptedVault, CHAR_ENCODING)
         decryptedVault.write(decrypt(encryptedValue.toByteArray(), password))
     }
 
     @Throws(IOException::class)
-    fun decrypt(encrypted: ByteArray, password: String?): ByteArray? {
+    fun decrypt(encrypted: ByteArray, password: String): ByteArray {
         val vaultInfo = VaultInfo.fromVaultData(encrypted)
         if (!vaultInfo.isEncryptedVault) {
             throw IOException("File is not an Ansible Encrypted Vault")

@@ -6,22 +6,22 @@ import java.io.OutputStream
 
 class CypherAES : CypherInterface {
     @Throws(IOException::class)
-    override fun decrypt(decodedStream: OutputStream, data: ByteArray, password: String?) {
+    override fun decrypt(decodedStream: OutputStream, data: ByteArray, password: String) {
         throw IOException(CYPHER_ID + " is not implemented.")
     }
 
     @Throws(IOException::class)
-    override fun decrypt(data: ByteArray, password: String?): ByteArray? {
+    override fun decrypt(data: ByteArray, password: String): ByteArray {
         throw IOException(CYPHER_ID + " is not implemented.")
     }
 
     @Throws(IOException::class)
-    override fun encrypt(encodedStream: OutputStream, data: ByteArray, password: String?) {
+    override fun encrypt(encodedStream: OutputStream, data: ByteArray, password: String) {
         throw IOException(CYPHER_ID + " is not implemented.")
     }
 
     @Throws(IOException::class)
-    override fun encrypt(data: ByteArray, password: String?): ByteArray? {
+    override fun encrypt(data: ByteArray, password: String): ByteArray {
         throw IOException(CYPHER_ID + " is not implemented.")
     }
 
