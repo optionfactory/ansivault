@@ -22,7 +22,10 @@ class VaultAction : AnAction() {
         val project = event.getData(CommonDataKeys.PROJECT) ?: return
         val ansibleVaultSecret = AnsibleVaultSecret.search(project)
 
-        val editor: Editor = event.getRequiredData(CommonDataKeys.EDITOR)
+        val editor: Editor? = event.getData(CommonDataKeys.EDITOR)
+        if (editor == null) {
+            return
+        }
         val caretModel: CaretModel = editor.caretModel
         val selectedText = caretModel.currentCaret.selectedText
         logger.warn("SomeAction selectedText %s".format(selectedText))
@@ -40,10 +43,10 @@ class VaultAction : AnAction() {
             } else {
                 logger.warn("Encrypting")
                 val encrypted = ansibleVaultSecret.encrypt(selectedText, indentSize)
-                if(caretModel.currentCaret.selectionStartPosition == VisualPosition(0,0)) {
+                if (caretModel.currentCaret.selectionStartPosition == VisualPosition(0, 0)) {
                     encrypted
                 } else {
-                    "%s%s".format(INLINE_VAULT, encrypted)
+                    "$INLINE_VAULT$encrypted"
                 }
             }
 
