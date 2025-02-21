@@ -82,8 +82,7 @@ class CypherAES256 : CypherInterface {
             if (padding_length == 0) {
                 padding_length = blockSize
             }
-            padded = cleartext.copyOf(cleartext.size + padding_length)
-            padded[padded.size - 1] = padding_length.toByte()
+            padded = cleartext.plus(ByteArray(padding_length) { padding_length.toByte() })
         } catch (ex: Exception) {
             IOException("Error calculating padding for " + CYPHER_ALGO + ": " + ex.message)
         }
