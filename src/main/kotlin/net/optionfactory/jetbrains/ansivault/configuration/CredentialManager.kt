@@ -19,21 +19,21 @@ class CredentialManager {
     companion object {
         fun getCredential(): Credentials? {
             val credentialAttributes = CredentialAttributes(
-                generateServiceName(subsystem, keyPrefix + getCurrentProject())
+                serviceName = generateServiceName(subsystem, keyPrefix + getCurrentProject())
             )
             return PasswordSafe.instance.get(credentialAttributes)
         }
 
         fun deleteCredential() {
             val credentialAttributes = CredentialAttributes(
-                generateServiceName(subsystem, keyPrefix + getCurrentProject())
+                serviceName = generateServiceName(subsystem, keyPrefix + getCurrentProject())
             )
             PasswordSafe.instance.set(credentialAttributes, null)
         }
 
         fun setCredential(password: String) {
             val credentialAttributes = CredentialAttributes(
-                generateServiceName(subsystem, keyPrefix + getCurrentProject())
+                serviceName = generateServiceName(subsystem, keyPrefix + getCurrentProject())
             )
             val credentials = Credentials(fakeUser, password)
             PasswordSafe.instance.set(credentialAttributes, credentials)
@@ -41,9 +41,7 @@ class CredentialManager {
 
         private fun getCurrentProject(): String {
             val asyncResult = CompletableFuture<DataContext>()
-            DataManager.getInstance().dataContextFromFocusAsync
-                .onSuccess { context: DataContext -> asyncResult.complete(context) }
-                .onError { it: Throwable -> asyncResult.completeExceptionally(it) }
+            DataManager.getInstance().dataContextFromFocusAsync.onSuccess { context: DataContext -> asyncResult.complete(context) }.onError { it: Throwable -> asyncResult.completeExceptionally(it) }
             return asyncResult.get().getData(CommonDataKeys.PROJECT)?.name.orEmpty()
         }
     }
