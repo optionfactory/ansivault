@@ -19,21 +19,24 @@ class CredentialManager {
     companion object {
         fun getCredential(): Credentials? {
             val credentialAttributes = CredentialAttributes(
-                serviceName = generateServiceName(subsystem, keyPrefix + getCurrentProject())
+                serviceName = generateServiceName(subsystem, keyPrefix + getCurrentProject()),
+                userName = fakeUser,
             )
             return PasswordSafe.instance.get(credentialAttributes)
         }
 
         fun deleteCredential() {
             val credentialAttributes = CredentialAttributes(
-                serviceName = generateServiceName(subsystem, keyPrefix + getCurrentProject())
+                serviceName = generateServiceName(subsystem, keyPrefix + getCurrentProject()),
+                userName = fakeUser,
             )
             PasswordSafe.instance.set(credentialAttributes, null)
         }
 
         fun setCredential(password: String) {
             val credentialAttributes = CredentialAttributes(
-                serviceName = generateServiceName(subsystem, keyPrefix + getCurrentProject())
+                serviceName = generateServiceName(subsystem, keyPrefix + getCurrentProject()),
+                userName = fakeUser,
             )
             val credentials = Credentials(fakeUser, password)
             PasswordSafe.instance.set(credentialAttributes, credentials)
