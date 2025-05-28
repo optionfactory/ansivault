@@ -7,8 +7,10 @@ import net.optionfactory.jetbrains.ansivault.crypto.VaultHandler
 import net.optionfactory.jetbrains.ansivault.ui.DialogBox
 import org.ini4j.Ini
 import java.io.File
+import java.nio.file.Files
 import kotlin.io.path.Path
 import kotlin.io.path.exists
+import kotlin.io.path.isReadable
 import kotlin.io.path.isRegularFile
 
 class AnsibleVaultSecret(val secret: String) {
@@ -33,16 +35,19 @@ class AnsibleVaultSecret(val secret: String) {
             val secret = listOfNotNull(projectConfig, homeConfig, systemConfig)
                 .filter { it.exists() && it.isRegularFile() }
                 .map { it.toFile() }
-                .map { file ->
+                .firstNotNullOfOrNull { file ->
                     val ini = Ini(file).get("defaults")?.get("vault_password_file")
                     val secret = ini?.let {
                         val realPath =
-                            if (it.startsWith("~")) it.replaceFirst("~", System.getProperty("user.home")) else it
-                        Path(realPath).toFile().readLines()[0]
+                            Path(if (it.startsWith("~")) it.replaceFirst("~", System.getProperty("user.home")) else it)
+
+                        if (realPath.exists() && realPath.isRegularFile() && realPath.isReadable()) {
+                            return@let Files.readAllLines(realPath)[0]
+                        }
+                        return@let null
                     }
-                    return@map secret
+                    return@firstNotNullOfOrNull secret
                 }
-                .firstOrNull()
 
             if (secret != null) {
                 return AnsibleVaultSecret(secret)
