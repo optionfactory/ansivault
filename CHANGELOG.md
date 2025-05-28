@@ -23,5 +23,9 @@
 - Bump various lib versions
 - compatibility with IDEA 2025.2
 
+## [0.0.5]
+### Fixed
+- NPE reading file specified in configuration, but the vault-password file doesn't exists.
+
 ## [Unreleased]
 
