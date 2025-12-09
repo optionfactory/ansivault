@@ -27,5 +27,12 @@
 ### Fixed
 - NPE reading file specified in configuration, but the vault-password file doesn't exists.
 
-## [Unreleased]
+## [0.0.6]
+### Skipped
+- Release skipped accidentally
+
+## [0.0.7]
+### Added
+- Bump various lib versions
+- Support for IDEA 2023.1
 
