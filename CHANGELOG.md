@@ -39,3 +39,6 @@
 ## [0.0.8]
 ### Added
 - Support for IDEA 2026.1
+
+## [Unreleased]
+### In development
