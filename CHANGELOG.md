@@ -36,5 +36,6 @@
 - Bump various lib versions
 - Support for IDEA 2023.1
 
-## [Unreleased]
-### In development
+## [0.0.8]
+### Added
+- Support for IDEA 2026.1
