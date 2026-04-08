@@ -30,8 +30,8 @@ class VaultAction : AnAction() {
         val selectedText = caretModel.currentCaret.selectedText
         logger.warn("SomeAction selectedText %s".format(selectedText))
         val indentSize = caretModel.currentCaret.selectionStartPosition.column
-        selectedText.let {
-            var text = it!!
+        selectedText?.let {
+            var text = it
 
             if (text.startsWith(INLINE_VAULT)) {
                 text = text.lines().drop(1).joinToString("\n").trimIndent()
