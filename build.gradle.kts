@@ -47,8 +47,8 @@ dependencies {
         zipSigner()
         testFramework(TestFrameworkType.Platform)
     }
-    implementation(group = "org.jetbrains.intellij.deps", name = "ini4j", version = "0.5.5-2")
-    implementation(group = "de.rtner", name = "PBKDF2", version = "1.1.4"){
+    implementation("org.jetbrains.intellij.deps:ini4j:0.5.5-2")
+    implementation("de.rtner:PBKDF2:1.1.4"){
         exclude("org.jboss.logging")
         exclude("org.picketbox")
     }
