@@ -40,5 +40,12 @@
 ### Added
 - Support for IDEA 2026.1
 
+## [0.0.9]
+### Added
+- Bump various lib versions
+- Support for IDEA 2026.2
+### Fixed
+- Avoid error when selected text is null
+
 ## [Unreleased]
 ### In development
