@@ -13,8 +13,8 @@ import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileDocumentManagerListener
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
+import com.intellij.openapi.fileEditor.ex.FileEditorManagerEx
 import com.intellij.openapi.fileEditor.impl.FileDocumentManagerBase
-import com.intellij.openapi.fileEditor.impl.FileEditorManagerImpl
 import com.intellij.openapi.fileTypes.PlainTextFileType
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.Messages
@@ -79,7 +79,7 @@ class VaultFragmentService(private val project: Project) : Disposable {
     }
 
     private fun openSplit(file: LightVirtualFile, placement: VaultEditorPlacement) {
-        val manager = FileEditorManager.getInstance(project) as FileEditorManagerImpl
+        val manager = FileEditorManagerEx.getInstanceEx(project)
         val window = manager.currentWindow
         if (window == null) {
             manager.openFile(file, true)
