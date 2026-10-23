@@ -47,5 +47,13 @@
 ### Fixed
 - Avoid error when selected text is null
 
+## [0.0.10]
+### Added
+- Gutter icon to edit encrypted vault blocks in a dedicated editor tab, with the decrypted text re-encrypted on close
+- Configurable placement of the vault editor: right, left, upper or bottom half of the editor, or a new tab
+- Vault editor tab named after the file and the key path of the property, e.g. `[AnsiVault] elaine.yaml: a.b.secret`
+### Fixed
+- NPE when the password dialog is cancelled
+
 ## [Unreleased]
 ### In development
