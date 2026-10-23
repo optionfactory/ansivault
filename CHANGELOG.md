@@ -55,5 +55,12 @@
 ### Fixed
 - NPE when the password dialog is cancelled
 
+## [0.0.11]
+### Changed
+- Vault editor re-encrypts the block on save (Ctrl+S) instead of on tab close, and only when the decrypted text has changed
+- Vault editor no longer uses internal IntelliJ APIs
+### Fixed
+- Deprecated `Document.addDocumentListener(DocumentListener)` usage in the gutter listener
+
 ## [Unreleased]
 ### In development
