@@ -1,6 +1,7 @@
 package net.optionfactory.jetbrains.ansivault.ui
 
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
@@ -9,8 +10,10 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.RangeMarker
 import com.intellij.openapi.editor.markup.RangeHighlighter
 import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.openapi.fileEditor.FileDocumentManagerListener
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
+import com.intellij.openapi.fileEditor.impl.FileDocumentManagerBase
 import com.intellij.openapi.fileEditor.impl.FileEditorManagerImpl
 import com.intellij.openapi.fileTypes.PlainTextFileType
 import com.intellij.openapi.project.Project
@@ -32,8 +35,13 @@ class VaultFragmentService(private val project: Project) : Disposable {
     init {
         project.messageBus.connect(this).subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, object : FileEditorManagerListener {
             override fun fileClosed(source: FileEditorManager, file: VirtualFile) {
-                val fragment = fragments.remove(file) ?: return
-                commit(fragment)
+                fragments.remove(file)?.range?.dispose()
+            }
+        })
+        ApplicationManager.getApplication().messageBus.connect(this).subscribe(FileDocumentManagerListener.TOPIC, object : FileDocumentManagerListener {
+            override fun beforeDocumentSaving(document: Document) {
+                val fragment = fragments.values.firstOrNull { it.document === document } ?: return
+                ApplicationManager.getApplication().invokeLater { commit(fragment) }
             }
         })
     }
@@ -55,12 +63,14 @@ class VaultFragmentService(private val project: Project) : Disposable {
             return
         }
         val file = LightVirtualFile(tabName(document, block), PlainTextFileType.INSTANCE, plainText)
+        file.putUserData(FileDocumentManagerBase.TRACK_NON_PHYSICAL, true)
         val fragmentDocument = FileDocumentManager.getInstance().getDocument(file) ?: return
         fragments[file] = VaultFragment(
             range = document.createRangeMarker(block.startOffset, block.endOffset),
             indent = block.indent,
             secret = secret,
             document = fragmentDocument,
+            plainText = plainText,
         )
         when (val placement = VaultSettings.getInstance(project).state.editorPlacement) {
             VaultEditorPlacement.NEW_TAB -> FileEditorManager.getInstance(project).openFile(file, true)
@@ -92,16 +102,21 @@ class VaultFragmentService(private val project: Project) : Disposable {
 
     private fun commit(fragment: VaultFragment) {
         val range = fragment.range
+        if (!range.isValid) {
+            return
+        }
+        val text = fragment.document.text
+        if (text == fragment.plainText) {
+            return
+        }
         try {
-            if (!range.isValid) {
-                return
-            }
-            val encrypted = fragment.secret.encrypt(fragment.document.text, fragment.indent)
+            val encrypted = fragment.secret.encrypt(text, fragment.indent)
             WriteCommandAction.runWriteCommandAction(project) {
                 range.document.replaceString(range.startOffset, range.endOffset, encrypted)
             }
-        } finally {
-            range.dispose()
+            fragment.plainText = text
+        } catch (e: Exception) {
+            Messages.showErrorDialog(project, e.message ?: "Unable to encrypt the vault", "Ansible Vault")
         }
     }
 
@@ -115,6 +130,7 @@ class VaultFragmentService(private val project: Project) : Disposable {
         val indent: Int,
         val secret: AnsibleVaultSecret,
         val document: Document,
+        var plainText: String,
     )
 
     companion object {
