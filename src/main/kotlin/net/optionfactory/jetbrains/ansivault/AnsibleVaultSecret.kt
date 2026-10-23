@@ -17,7 +17,7 @@ class AnsibleVaultSecret(val secret: String) {
 
     companion object {
         val logger = Logger.getInstance(AnsibleVaultSecret::class.java)
-        fun search(project: Project): AnsibleVaultSecret {
+        fun search(project: Project): AnsibleVaultSecret? {
             val systemProp = System.getProperty("ANSIBLE_CONFIG")
             if (systemProp != null) {
                 return AnsibleVaultSecret(systemProp)
@@ -53,13 +53,10 @@ class AnsibleVaultSecret(val secret: String) {
                 return AnsibleVaultSecret(secret)
             }
 
-            val maybeCredential = CredentialManager.getCredential()
-            if (maybeCredential == null) {
-                DialogBox().showAndGet()
-            }
-
-            val secretFromBox = String(CredentialManager.getCredential()!!.password!!.toByteArray())
-            return AnsibleVaultSecret(secretFromBox)
+            val credential = CredentialManager.getCredential()
+                ?: if (DialogBox().showAndGet()) CredentialManager.getCredential() else null
+            val password = credential?.password ?: return null
+            return AnsibleVaultSecret(String(password.toByteArray()))
         }
     }
 

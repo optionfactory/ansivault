@@ -20,7 +20,7 @@ class VaultAction : AnAction() {
         logger.warn("SomeAction performed %s".format(event))
         val document = event.getData(PlatformDataKeys.EDITOR)?.document
         val project = event.getData(CommonDataKeys.PROJECT) ?: return
-        val ansibleVaultSecret = AnsibleVaultSecret.search(project)
+        val ansibleVaultSecret = AnsibleVaultSecret.search(project) ?: return
 
         val editor: Editor? = event.getData(CommonDataKeys.EDITOR)
         if (editor == null) {

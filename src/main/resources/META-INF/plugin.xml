@@ -13,6 +13,9 @@
                 id="net.optionfactory.jetbrains.ansivault.configuration.ProjectConfigurable"
                 displayName="AnsiVault Configuration"
         />
+        <editorFactoryListener implementation="net.optionfactory.jetbrains.ansivault.gutter.VaultGutterListener"/>
+        <projectService serviceImplementation="net.optionfactory.jetbrains.ansivault.ui.VaultFragmentService"/>
+        <projectService serviceImplementation="net.optionfactory.jetbrains.ansivault.configuration.VaultSettings"/>
     </extensions>
     <actions>
         <group id="ansivault">
@@ -25,6 +28,7 @@
                 icon="/icons/icon.svg">
             <add-to-group group-id="ansivault" anchor="first"/>
         </action>
+
 
     </actions>
 </idea-plugin>
