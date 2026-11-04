@@ -62,5 +62,9 @@
 ### Fixed
 - Deprecated `Document.addDocumentListener(DocumentListener)` usage in the gutter listener
 
+## [0.0.12]
+### Added
+- Extend plugin compatibility through IntelliJ Platform 2026.3
+
 ## [Unreleased]
 ### In development
