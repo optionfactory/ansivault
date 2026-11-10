@@ -65,6 +65,8 @@
 ## [0.0.12]
 ### Added
 - Extend plugin compatibility through IntelliJ Platform 2026.3
+
+## [0.0.13]
 ### Fixed
 - Replace deprecated `FileEditorManager.openFile(VirtualFile, boolean)` usage
 
