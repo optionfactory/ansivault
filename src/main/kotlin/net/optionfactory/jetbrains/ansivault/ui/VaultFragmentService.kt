@@ -13,6 +13,7 @@ import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileDocumentManagerListener
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
+import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.fileEditor.ex.FileEditorManagerEx
 import com.intellij.openapi.fileEditor.impl.FileDocumentManagerBase
 import com.intellij.openapi.fileTypes.PlainTextFileType
@@ -73,7 +74,7 @@ class VaultFragmentService(private val project: Project) : Disposable {
             plainText = plainText,
         )
         when (val placement = VaultSettings.getInstance(project).state.editorPlacement) {
-            VaultEditorPlacement.NEW_TAB -> FileEditorManager.getInstance(project).openFile(file, true)
+            VaultEditorPlacement.NEW_TAB -> OpenFileDescriptor(project, file).navigate(true)
             else -> openSplit(file, placement)
         }
     }
@@ -82,7 +83,7 @@ class VaultFragmentService(private val project: Project) : Disposable {
         val manager = FileEditorManagerEx.getInstanceEx(project)
         val window = manager.currentWindow
         if (window == null) {
-            manager.openFile(file, true)
+            OpenFileDescriptor(project, file).navigate(true)
             return
         }
         val orientation = when (placement) {
