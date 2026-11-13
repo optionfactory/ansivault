@@ -70,7 +70,7 @@
 ### Fixed
 - Replace deprecated `FileEditorManager.openFile(VirtualFile, boolean)` usage
 
-## [Unreleased]
+## [0.0.14]
 ### Added
 - Vault ids (#18): `$ANSIBLE_VAULT;1.2` vaults, `vault_identity_list`, `vault_identity`, `vault_encrypt_identity`, `vault_id_match` (and their `ANSIBLE_*` env vars)
 - Project setting to choose the vault id used to encrypt when several are configured
@@ -84,3 +84,6 @@
 - Salts are generated with `SecureRandom`
 - Selecting a 1.2 vault and running "Ansible Encrypt" encrypted it a second time
 - Encrypt/decrypt errors are shown in a dialog instead of the IDE error reporter
+
+## [Unreleased]
+### In development
