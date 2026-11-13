@@ -15,5 +15,4 @@ interface CypherInterface {
 
     @Throws(IOException::class)
     fun encrypt(data: ByteArray, password: String): ByteArray
-    fun infoLine(): String
 }

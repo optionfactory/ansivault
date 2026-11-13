@@ -57,8 +57,8 @@ class VaultFragmentService(private val project: Project) : Disposable {
             return
         }
         val secret = AnsibleVaultSecret.search(project) ?: return
-        val plainText = try {
-            secret.decrypt(block.vaultText)
+        val (plainText, editSecret) = try {
+            secret.decryptForEdit(block.vaultText)
         } catch (e: Exception) {
             Messages.showErrorDialog(project, e.message ?: "Unable to decrypt the vault", "Ansible Vault")
             return
@@ -69,7 +69,7 @@ class VaultFragmentService(private val project: Project) : Disposable {
         fragments[file] = VaultFragment(
             range = document.createRangeMarker(block.startOffset, block.endOffset),
             indent = block.indent,
-            secret = secret,
+            secret = editSecret,
             document = fragmentDocument,
             plainText = plainText,
         )

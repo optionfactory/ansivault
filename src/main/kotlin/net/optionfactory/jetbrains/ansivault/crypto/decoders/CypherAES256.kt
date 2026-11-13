@@ -4,7 +4,6 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.diagnostic.trace
 import net.optionfactory.jetbrains.ansivault.crypto.data.HexMarshaller.encode
 import net.optionfactory.jetbrains.ansivault.crypto.data.VaultContent
-import net.optionfactory.jetbrains.ansivault.crypto.data.VaultInfo
 import java.io.IOException
 import java.io.OutputStream
 import java.util.*
@@ -163,10 +162,6 @@ class CypherAES256 : CypherInterface {
     @Throws(IOException::class)
     override fun encrypt(encodedStream: OutputStream, data: ByteArray, password: String) {
         encodedStream.write(encrypt(data, password))
-    }
-
-    override fun infoLine(): String {
-        return VaultInfo.vaultInfoForCypher(CYPHER_ID)
     }
 
     @Throws(IOException::class)

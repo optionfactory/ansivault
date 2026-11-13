@@ -81,4 +81,28 @@ class AnsivaultIT {
 
         assertEquals(clearText, decrypted)
     }
+
+    @Test
+    fun `vault ids are compatible with ansible-vault both ways`() {
+        val tempDir = Files.createTempDirectory("ansivaultid").toFile()
+        val passFile = File(tempDir, "dev.pass").apply { writeText("secret") }
+        val ansible = { args: List<String> ->
+            val process = ProcessBuilder(listOf("ansible-vault") + args)
+                .apply { environment()["ANSIBLE_VAULT_ID_MATCH"] = "1" }
+                .redirectOutput(ProcessBuilder.Redirect.INHERIT)
+                .redirectError(ProcessBuilder.Redirect.INHERIT)
+                .start()
+            process.waitFor(10, TimeUnit.SECONDS)
+            assertEquals(0, process.exitValue())
+        }
+
+        val ours = File(tempDir, "ours.yml").apply { writeText(AnsibleVaultSecret(mapOf("dev" to "secret")).encrypt("from ansivault")) }
+        ansible(listOf("decrypt", "--vault-id", "dev@${passFile.absolutePath}", ours.absolutePath))
+        assertEquals("from ansivault", ours.readText())
+
+        val theirs = File(tempDir, "theirs.yml").apply { writeText("from ansible") }
+        ansible(listOf("encrypt", "--vault-id", "dev@${passFile.absolutePath}", theirs.absolutePath))
+        val secret = AnsibleVaultSecret(mapOf("prod" to "wrong", "dev" to "secret"), vaultIdMatch = true)
+        assertEquals("from ansible", secret.decrypt(theirs.readText()))
+    }
 }

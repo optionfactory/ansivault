@@ -1,47 +1,43 @@
 package net.optionfactory.jetbrains.ansivault.ui
 
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.ui.ValidationInfo
+import com.intellij.util.ui.FormBuilder
 import net.optionfactory.jetbrains.ansivault.configuration.CredentialManager
-import java.awt.BorderLayout
-import java.awt.Component
-import javax.swing.*
+import net.optionfactory.jetbrains.ansivault.crypto.data.VaultInfo.Companion.DEFAULT_VAULT_ID
+import javax.swing.JComponent
+import javax.swing.JPasswordField
 
-class DialogBox() : DialogWrapper(true) {
+/** Asks the passwords of the given vault ids and saves them in the PasswordSafe. */
+class DialogBox(private val project: Project, vaultIds: List<String>) : DialogWrapper(project, true) {
     val logger = Logger.getInstance(DialogWrapper::class.java)
 
-    private lateinit var pass: JPasswordField
+    private val fields = vaultIds.associateWith { JPasswordField(20) }
 
     init {
-        title = "Vault Encrypt"
+        title = "Ansible Vault Password"
         isResizable = true
         init()
     }
 
     override fun createCenterPanel(): JComponent {
-        val dialogPanel = JPanel()
-        val boxLayout = BoxLayout(dialogPanel, BoxLayout.Y_AXIS)
-
-        dialogPanel.layout = boxLayout
-
-        val label = JLabel("Secret:")
-        label.alignmentX = Component.LEFT_ALIGNMENT
-        dialogPanel.add(label, BorderLayout.CENTER)
-        pass = JPasswordField(20)
-        pass.alignmentX = Component.LEFT_ALIGNMENT
-        dialogPanel.add(pass, BorderLayout.CENTER)
-
-        return dialogPanel
+        val form = FormBuilder.createFormBuilder()
+        fields.forEach { (vaultId, field) ->
+            form.addLabeledComponent(if (vaultId == DEFAULT_VAULT_ID) "Secret:" else "Vault id '$vaultId':", field)
+        }
+        return form.panel
     }
 
-    override fun getPreferredFocusedComponent(): JComponent {
-        return pass
+    override fun getPreferredFocusedComponent(): JComponent? {
+        return fields.values.firstOrNull()
     }
 
     override fun doValidate(): ValidationInfo? {
-        if (pass.password.isEmpty()) {
-            return ValidationInfo("Secret cannot be an empty string", pass)
+        val empty = fields.values.firstOrNull { it.password.isEmpty() }
+        if (empty != null) {
+            return ValidationInfo("Secret cannot be an empty string", empty)
         }
         return super.doValidate()
     }
@@ -51,7 +47,7 @@ class DialogBox() : DialogWrapper(true) {
             logger.warn("Ok action is not enabled")
             return
         }
-        CredentialManager.setCredential(String(pass.password))
+        fields.forEach { (vaultId, field) -> CredentialManager.setPassword(project, vaultId, String(field.password)) }
         close(OK_EXIT_CODE)
     }
 }

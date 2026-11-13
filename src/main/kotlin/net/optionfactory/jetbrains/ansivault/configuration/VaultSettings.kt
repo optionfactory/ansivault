@@ -21,6 +21,10 @@ class VaultSettings : PersistentStateComponent<VaultSettings.State> {
 
     class State {
         var editorPlacement: VaultEditorPlacement = VaultEditorPlacement.SPLIT_RIGHT
+        /** Vault id used to encrypt when several are configured; blank = ansible's vault_encrypt_identity. */
+        var encryptVaultId: String = ""
+        /** Vault ids with a password in the PasswordSafe, which cannot list its own keys. */
+        var savedVaultIds: MutableSet<String> = mutableSetOf()
     }
 
     private var state = State()

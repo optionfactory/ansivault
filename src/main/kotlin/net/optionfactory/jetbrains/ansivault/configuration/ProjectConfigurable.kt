@@ -24,23 +24,29 @@ class ProjectConfigurable(private val project: Project) : Configurable {
 
     @Nullable
     override fun createComponent(): JComponent? {
-        mySettingsComponent = AppSettingsComponent()
-        mySettingsComponent!!.select(VaultSettings.getInstance(project).state.editorPlacement)
+        mySettingsComponent = AppSettingsComponent(project)
+        reset()
         return mySettingsComponent!!.mainPanel
     }
 
     override fun isModified(): Boolean {
-        val selected = mySettingsComponent?.selectedPlacement ?: return false
-        return selected != VaultSettings.getInstance(project).state.editorPlacement
+        val component = mySettingsComponent ?: return false
+        val state = VaultSettings.getInstance(project).state
+        return component.selectedPlacement != state.editorPlacement || component.encryptVaultId.text.trim() != state.encryptVaultId
     }
 
     override fun apply() {
-        val selected = mySettingsComponent?.selectedPlacement ?: return
-        VaultSettings.getInstance(project).state.editorPlacement = selected
+        val component = mySettingsComponent ?: return
+        val state = VaultSettings.getInstance(project).state
+        state.editorPlacement = component.selectedPlacement
+        state.encryptVaultId = component.encryptVaultId.text.trim()
     }
 
     override fun reset() {
-        mySettingsComponent?.select(VaultSettings.getInstance(project).state.editorPlacement)
+        val component = mySettingsComponent ?: return
+        val state = VaultSettings.getInstance(project).state
+        component.select(state.editorPlacement)
+        component.encryptVaultId.text = state.encryptVaultId
     }
 
     override fun disposeUIResources() {

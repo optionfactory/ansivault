@@ -71,4 +71,16 @@
 - Replace deprecated `FileEditorManager.openFile(VirtualFile, boolean)` usage
 
 ## [Unreleased]
-### In development
+### Added
+- Vault ids (#18): `$ANSIBLE_VAULT;1.2` vaults, `vault_identity_list`, `vault_identity`, `vault_encrypt_identity`, `vault_id_match` (and their `ANSIBLE_*` env vars)
+- Project setting to choose the vault id used to encrypt when several are configured
+- One dialog asks the passwords of all vault ids sourced from `prompt`
+### Changed
+- Relative password file paths are resolved against the directory of the `ansible.cfg` defining them
+- User config file is `~/.ansible.cfg` (was `~/ansible.cfg`), `ANSIBLE_CONFIG` is read from the environment as config path
+- Debug logs no longer contain secrets at debug level (moved to trace)
+- "Forget Saved Passwords" in Settings forgets the passwords of all the vault ids of the project
+### Fixed
+- Salts are generated with `SecureRandom`
+- Selecting a 1.2 vault and running "Ansible Encrypt" encrypted it a second time
+- Encrypt/decrypt errors are shown in a dialog instead of the IDE error reporter

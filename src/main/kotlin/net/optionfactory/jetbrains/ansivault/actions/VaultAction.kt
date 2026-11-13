@@ -9,6 +9,7 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.CaretModel
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.VisualPosition
+import com.intellij.openapi.ui.Messages
 import net.optionfactory.jetbrains.ansivault.AnsibleVaultSecret
 import net.optionfactory.jetbrains.ansivault.crypto.data.VaultInfo
 
@@ -37,17 +38,22 @@ class VaultAction : AnAction() {
                 text = text.lines().drop(1).joinToString("\n").trimIndent()
             }
 
-            val result = if (VaultInfo(text).isEncryptedVault) {
-                logger.debug("Decrypting")
-                ansibleVaultSecret.decrypt(text)
-            } else {
-                logger.debug("Encrypting")
-                val encrypted = ansibleVaultSecret.encrypt(selectedText, indentSize)
-                if (caretModel.currentCaret.selectionStartPosition == VisualPosition(0, 0)) {
-                    encrypted
+            val result = try {
+                if (VaultInfo(text).isEncryptedVault) {
+                    logger.debug("Decrypting")
+                    ansibleVaultSecret.decrypt(text)
                 } else {
-                    "$INLINE_VAULT$encrypted"
+                    logger.debug("Encrypting")
+                    val encrypted = ansibleVaultSecret.encrypt(selectedText, indentSize)
+                    if (caretModel.currentCaret.selectionStartPosition == VisualPosition(0, 0)) {
+                        encrypted
+                    } else {
+                        "$INLINE_VAULT$encrypted"
+                    }
                 }
+            } catch (e: Exception) {
+                Messages.showErrorDialog(project, e.message ?: "Unable to process the vault", "Ansible Vault")
+                return
             }
 
             val primaryCaret = editor.caretModel.primaryCaret
