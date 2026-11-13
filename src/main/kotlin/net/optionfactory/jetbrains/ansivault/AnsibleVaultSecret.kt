@@ -18,10 +18,7 @@ class AnsibleVaultSecret(val secret: String) {
     companion object {
         val logger = Logger.getInstance(AnsibleVaultSecret::class.java)
         fun search(project: Project): AnsibleVaultSecret? {
-            val systemProp = System.getProperty("ANSIBLE_CONFIG")
-            if (systemProp != null) {
-                return AnsibleVaultSecret(systemProp)
-            }
+            val envConfig = System.getenv("ANSIBLE_CONFIG")?.let { Path(it) }
             val projectConfig = project.basePath?.let { path ->
                 File(path).walk(FileWalkDirection.TOP_DOWN)
                     .asSequence()
@@ -30,9 +27,10 @@ class AnsibleVaultSecret(val secret: String) {
                     .map { file -> file.toPath() }
                     .firstOrNull()
             }
-            val homeConfig = Path(System.getProperty("user.home")).resolve("ansible.cfg")
+            val homeConfig = Path(System.getProperty("user.home")).resolve(".ansible.cfg")
             val systemConfig = Path("/etc/ansible/ansible.cfg")
-            val secret = listOfNotNull(projectConfig, homeConfig, systemConfig)
+            // same precedence as ansible: ANSIBLE_CONFIG, ./ansible.cfg, ~/.ansible.cfg, /etc/ansible/ansible.cfg
+            val secret = listOfNotNull(envConfig, projectConfig, homeConfig, systemConfig)
                 .filter { it.exists() && it.isRegularFile() }
                 .map { it.toFile() }
                 .firstNotNullOfOrNull { file ->

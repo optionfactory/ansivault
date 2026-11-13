@@ -3,6 +3,7 @@ package net.optionfactory.jetbrains.ansivault.crypto.decoders
 import de.rtner.security.auth.spi.PBKDF2Engine
 import de.rtner.security.auth.spi.PBKDF2Parameters
 import java.io.IOException
+import java.security.SecureRandom
 import java.util.*
 
 class EncryptionKeychain {
@@ -79,7 +80,7 @@ class EncryptionKeychain {
 
     private fun generateSalt(length: Int): ByteArray {
         val salt = ByteArray(length)
-        Random().nextBytes(salt)
+        SecureRandom().nextBytes(salt)
         return salt
     }
 

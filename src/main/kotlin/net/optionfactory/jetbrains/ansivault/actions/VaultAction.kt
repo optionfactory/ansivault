@@ -17,7 +17,7 @@ class VaultAction : AnAction() {
     val logger = Logger.getInstance(VaultAction::class.java)
 
     override fun actionPerformed(event: AnActionEvent) {
-        logger.warn("SomeAction performed %s".format(event))
+        logger.debug("VaultAction performed %s".format(event))
         val document = event.getData(PlatformDataKeys.EDITOR)?.document
         val project = event.getData(CommonDataKeys.PROJECT) ?: return
         val ansibleVaultSecret = AnsibleVaultSecret.search(project) ?: return
@@ -28,7 +28,7 @@ class VaultAction : AnAction() {
         }
         val caretModel: CaretModel = editor.caretModel
         val selectedText = caretModel.currentCaret.selectedText
-        logger.warn("SomeAction selectedText %s".format(selectedText))
+        logger.trace("VaultAction selectedText %s".format(selectedText))
         val indentSize = caretModel.currentCaret.selectionStartPosition.column
         selectedText?.let {
             var text = it
@@ -38,10 +38,10 @@ class VaultAction : AnAction() {
             }
 
             val result = if (VaultInfo(text).isEncryptedVault) {
-                logger.warn("Decrypting")
+                logger.debug("Decrypting")
                 ansibleVaultSecret.decrypt(text)
             } else {
-                logger.warn("Encrypting")
+                logger.debug("Encrypting")
                 val encrypted = ansibleVaultSecret.encrypt(selectedText, indentSize)
                 if (caretModel.currentCaret.selectionStartPosition == VisualPosition(0, 0)) {
                     encrypted

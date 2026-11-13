@@ -1,6 +1,7 @@
 package net.optionfactory.jetbrains.ansivault.crypto.decoders
 
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.diagnostic.trace
 import net.optionfactory.jetbrains.ansivault.crypto.data.HexMarshaller.encode
 import net.optionfactory.jetbrains.ansivault.crypto.data.VaultContent
 import net.optionfactory.jetbrains.ansivault.crypto.data.VaultInfo
@@ -137,24 +138,16 @@ class CypherAES256 : CypherInterface {
         val keys = EncryptionKeychain(salt, password, KEYLEN, IVLEN, ITERATIONS, KEYGEN_ALGO)
 
         val cypherKey = keys.encryptionKey
-        logger.debug(
-            "Key 1: {} - {}", cypherKey.size, encode(
-                cypherKey, 100
-            )
-        )
+        logger.trace { "Key 1: ${cypherKey.size} - ${encode(cypherKey, 100)}" }
         val hmacKey = keys.hmacKey
-        logger.debug(
-            "Key 2: {} - {}", hmacKey.size, encode(
-                hmacKey, 100
-            )
-        )
+        logger.trace { "Key 2: ${hmacKey.size} - ${encode(hmacKey, 100)}" }
         val iv = keys.iv
-        logger.debug("IV: {} - {}", iv.size, encode(iv, 100))
+        logger.trace { "IV: ${iv.size} - ${encode(iv, 100)}" }
 
         if (verifyHMAC(hmac, hmacKey, cypher)) {
             logger.debug("Signature matches - decrypting")
             decrypted = decryptAES(cypher, cypherKey, iv)
-            logger.debug("Decoded:\n{}", String(decrypted, charset(CHAR_ENCODING)))
+            logger.trace { "Decoded:\n${String(decrypted, charset(CHAR_ENCODING))}" }
         } else {
             throw IOException("HMAC Digest doesn't match - possibly it's the wrong password.")
         }
@@ -180,19 +173,11 @@ class CypherAES256 : CypherInterface {
     override fun encrypt(data: ByteArray, password: String): ByteArray {
         val keys = EncryptionKeychain(SALT_LENGTH, password, KEYLEN, IVLEN, ITERATIONS, KEYGEN_ALGO)
         val cypherKey = keys.encryptionKey
-        logger.debug(
-            "Key 1: {} - {}", cypherKey.size, encode(
-                cypherKey, 100
-            )
-        )
+        logger.trace { "Key 1: ${cypherKey.size} - ${encode(cypherKey, 100)}" }
         val hmacKey = keys.hmacKey
-        logger.debug(
-            "Key 2: {} - {}", hmacKey.size, encode(
-                hmacKey, 100
-            )
-        )
+        logger.trace { "Key 2: ${hmacKey.size} - ${encode(hmacKey, 100)}" }
         val iv = keys.iv
-        logger.debug("IV: {} - {}", iv.size, encode(iv, 100))
+        logger.trace { "IV: ${iv.size} - ${encode(iv, 100)}" }
         logger.debug("Original data length: {}", data.size)
         val padded = pad(data)
         logger.debug("Padded data length: {}", padded.size)
