@@ -13,7 +13,7 @@ import com.intellij.openapi.editor.markup.RangeHighlighter
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.util.Key
-import com.intellij.util.Alarm
+import javax.swing.Timer
 
 /** Adds a gutter icon on the header of each vault of the file editors; refreshed when typing pauses. */
 class VaultGutterListener : EditorFactoryListener {
@@ -25,21 +25,20 @@ class VaultGutterListener : EditorFactoryListener {
         }
         val disposable = Disposer.newDisposable("ansivault.gutter")
         editor.putUserData(DISPOSABLE_KEY, disposable)
-        val alarm = Alarm(Alarm.ThreadToUse.SWING_THREAD, disposable)
-        val refreshLater = {
-            alarm.cancelAllRequests()
-            alarm.addRequest(Runnable {
-                if (!editor.isDisposed) {
-                    refresh(editor)
-                }
-            }, REFRESH_DELAY_MS)
+        // a Swing timer fires on the EDT; restart() postpones the refresh while typing
+        val timer = Timer(REFRESH_DELAY_MS) {
+            if (!editor.isDisposed) {
+                refresh(editor)
+            }
         }
+        timer.isRepeats = false
+        Disposer.register(disposable) { timer.stop() }
         editor.document.addDocumentListener(object : DocumentListener {
             override fun documentChanged(event: DocumentEvent) {
-                refreshLater()
+                timer.restart()
             }
         }, disposable)
-        refreshLater()
+        timer.start()
     }
 
     override fun editorReleased(event: EditorFactoryEvent) {

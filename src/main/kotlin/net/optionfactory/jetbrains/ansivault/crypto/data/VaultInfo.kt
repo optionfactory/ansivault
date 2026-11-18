@@ -52,7 +52,7 @@ class VaultInfo(infoLine: String) {
         const val CYPHER_PART: Int = 2
         const val VAULT_ID_PART: Int = 3
 
-        const val VAULT_MAGIC: String = "\$ANSIBLE_VAULT"
+        const val VAULT_MAGIC: String = $$"$ANSIBLE_VAULT"
         const val VAULT_VERSION: String = "1.1"
         const val VAULT_VERSION_WITH_ID: String = "1.2"
         const val DEFAULT_VAULT_ID: String = "default"
