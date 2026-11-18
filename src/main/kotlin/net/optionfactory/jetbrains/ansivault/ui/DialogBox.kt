@@ -12,7 +12,7 @@ import javax.swing.JPasswordField
 
 /** Asks the passwords of the given vault ids and saves them in the PasswordSafe. */
 class DialogBox(private val project: Project, vaultIds: List<String>) : DialogWrapper(project, true) {
-    val logger = Logger.getInstance(DialogWrapper::class.java)
+    private val logger = Logger.getInstance(DialogBox::class.java)
 
     private val fields = vaultIds.associateWith { JPasswordField(20) }
 

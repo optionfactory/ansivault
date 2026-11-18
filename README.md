@@ -11,7 +11,7 @@ Easy Vault and Unvault ansible secret file and YML properties, with support for 
 
 The ansible configuration is looked up in this order:
 1. The file pointed by the environment variable `ANSIBLE_CONFIG`
-2. The first `ansible.cfg` found in the project path. This is made to support a project structure like `<root>/infrastructure/ansible/ansible.cfg`
+2. The `ansible.cfg` in the project root, or else the shallowest one in the project (up to 5 levels deep, skipping hidden, `node_modules`, `build`, `target`, `out`, `dist`, `venv` directories). This is made to support a project structure like `<root>/infrastructure/ansible/ansible.cfg`
 3. `$HOME/.ansible.cfg`
 4. `/etc/ansible/ansible.cfg`
 

@@ -1,29 +1,28 @@
 package net.optionfactory.jetbrains.ansivault.crypto.data
 
-import com.intellij.openapi.diagnostic.Logger
 import net.optionfactory.jetbrains.ansivault.crypto.decoders.CypherFactory
 import net.optionfactory.jetbrains.ansivault.crypto.decoders.CypherInterface
+import java.io.IOException
 
+/** The header line of a vault: `$ANSIBLE_VAULT;1.1;AES256` or `$ANSIBLE_VAULT;1.2;AES256;label`. */
 class VaultInfo(infoLine: String) {
-    private var logger: Logger = Logger.getInstance(VaultInfo::class.java)
 
     var isEncryptedVault: Boolean = false
         private set
     var vaultVersion: String? = null
         private set
-    private var vaultCypher: String? = null
+    var vaultCypher: String? = null
+        private set
 
-    /** Label of a 1.2 vault (`$ANSIBLE_VAULT;1.2;AES256;label`), null for 1.1. */
+    /** Label of a 1.2 vault, null for 1.1. */
     var vaultId: String? = null
         private set
 
     init {
-        logger.debug("Ansible Vault info: {}", infoLine)
-
         val header = infoLine.lineSequence().first().trim()
-        val infoParts = header.split(INFO_SEPARATOR.toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-        if (infoParts.size == INFO_ELEMENTS || infoParts.size == INFO_ELEMENTS + 1) {
-            if (infoParts[MAGIC_PART] == VAULT_MAGIC) {
+        if (header.startsWith(VAULT_MAGIC)) {
+            val infoParts = header.split(INFO_SEPARATOR).dropLastWhile { it.isEmpty() }
+            if ((infoParts.size == INFO_ELEMENTS || infoParts.size == INFO_ELEMENTS + 1) && infoParts[MAGIC_PART] == VAULT_MAGIC) {
                 isEncryptedVault = true
                 vaultVersion = infoParts[VERSION_PART]
                 vaultCypher = infoParts[CYPHER_PART]
@@ -33,10 +32,16 @@ class VaultInfo(infoLine: String) {
     }
 
     val cypher: CypherInterface
-        get() = CypherFactory.getCypher(vaultCypher!!)
+        @Throws(IOException::class)
+        get() = CypherFactory.getCypher(vaultCypher ?: throw IOException("Not an Ansible vault"))
 
+    /** An encrypted vault in a version we can read: 1.1, or 1.2 with its vault id. */
     fun isValidVault(): Boolean {
-        return isEncryptedVault
+        return isEncryptedVault && when (vaultVersion) {
+            VAULT_VERSION -> vaultId == null
+            VAULT_VERSION_WITH_ID -> !vaultId.isNullOrEmpty()
+            else -> false
+        }
     }
 
     companion object {
@@ -61,7 +66,7 @@ class VaultInfo(infoLine: String) {
         }
 
         fun fromVaultData(data: ByteArray): VaultInfo {
-            return VaultInfo(String(data).lines().first())
+            return VaultInfo(String(data, Charsets.UTF_8))
         }
     }
 }

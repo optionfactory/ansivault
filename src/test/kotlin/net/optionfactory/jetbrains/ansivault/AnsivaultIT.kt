@@ -1,14 +1,28 @@
 package net.optionfactory.jetbrains.ansivault
 
 import org.junit.Assert.assertEquals
-import org.junit.Ignore
+import org.junit.Assume.assumeTrue
+import org.junit.Before
 import org.junit.Test
 import java.io.File
 import java.nio.file.Files
 import java.util.concurrent.TimeUnit
 
-@Ignore
+/** Compatibility with the real `ansible-vault`; skipped when it is not installed. */
 class AnsivaultIT {
+
+    @Before
+    fun requireAnsibleVault() {
+        val available = try {
+            ProcessBuilder("ansible-vault", "--version").redirectErrorStream(true).start().let { process ->
+                process.inputStream.readAllBytes()
+                process.waitFor(30, TimeUnit.SECONDS) && process.exitValue() == 0
+            }
+        } catch (e: java.io.IOException) {
+            false
+        }
+        assumeTrue("ansible-vault not installed", available)
+    }
 
     @Test
     fun `can encrypt with Ansivault and decrypt with ansible-vault`() {
