@@ -36,7 +36,12 @@ class VaultFragmentService(private val project: Project) : Disposable {
     init {
         project.messageBus.connect(this).subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, object : FileEditorManagerListener {
             override fun fileClosed(source: FileEditorManager, file: VirtualFile) {
-                fragments.remove(file)?.range?.dispose()
+                val fragment = fragments.remove(file) ?: return
+                // closing the vault editor re-encrypts the text if it changed, even if it was never saved
+                ApplicationManager.getApplication().invokeLater({
+                    commit(fragment)
+                    fragment.range.dispose()
+                }, project.disposed)
             }
         })
         ApplicationManager.getApplication().messageBus.connect(this).subscribe(FileDocumentManagerListener.TOPIC, object : FileDocumentManagerListener {
@@ -56,13 +61,7 @@ class VaultFragmentService(private val project: Project) : Disposable {
         if (fragments.values.any { it.range.isValid && it.range.document === document && it.range.startOffset == block.startOffset }) {
             return
         }
-        val secret = AnsibleVaultSecret.search(project) ?: return
-        val (plainText, editSecret) = try {
-            secret.decryptForEdit(block.vaultText)
-        } catch (e: Exception) {
-            Messages.showErrorDialog(project, e.message ?: "Unable to decrypt the vault", "Ansible Vault")
-            return
-        }
+        val (plainText, editSecret) = VaultDecryption.decryptForEdit(project, block.vaultText) ?: return
         val file = LightVirtualFile(tabName(document, block), PlainTextFileType.INSTANCE, plainText)
         file.putUserData(FileDocumentManagerBase.TRACK_NON_PHYSICAL, true)
         val fragmentDocument = FileDocumentManager.getInstance().getDocument(file) ?: return
@@ -102,12 +101,17 @@ class VaultFragmentService(private val project: Project) : Disposable {
     }
 
     private fun commit(fragment: VaultFragment) {
-        val range = fragment.range
-        if (!range.isValid) {
-            return
-        }
         val text = fragment.document.text
         if (text == fragment.plainText) {
+            return
+        }
+        val range = fragment.range
+        if (!range.isValid) {
+            Messages.showErrorDialog(
+                project,
+                "The vault was removed from the original file: the changes cannot be encrypted back.",
+                VaultDecryption.TITLE,
+            )
             return
         }
         try {
@@ -117,7 +121,7 @@ class VaultFragmentService(private val project: Project) : Disposable {
             }
             fragment.plainText = text
         } catch (e: Exception) {
-            Messages.showErrorDialog(project, e.message ?: "Unable to encrypt the vault", "Ansible Vault")
+            VaultDecryption.showError(project, e)
         }
     }
 

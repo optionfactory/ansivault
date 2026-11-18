@@ -1,130 +1,38 @@
 package net.optionfactory.jetbrains.ansivault.crypto.data
 
-import com.intellij.openapi.diagnostic.Logger
-import net.optionfactory.jetbrains.ansivault.crypto.data.HexMarshaller.encode
 import net.optionfactory.jetbrains.ansivault.crypto.data.HexMarshaller.decode
+import net.optionfactory.jetbrains.ansivault.crypto.data.HexMarshaller.encode
 import java.io.IOException
 
-class VaultContent {
-    var logger: Logger = Logger.getInstance(VaultContent::class.java)
-
-    val salt: ByteArray
-    val hmac: ByteArray
-    val data: ByteArray
-
-    constructor(encryptedVault: ByteArray) {
-        val vaultContents = splitData(encryptedVault)
-        salt = decode(String(vaultContents[0]!!, charset(CHAR_ENCODING)))
-        hmac = decode(String(vaultContents[1]!!, charset(CHAR_ENCODING)))
-        data = decode(String(vaultContents[2]!!, charset(CHAR_ENCODING)))
-    }
-
-    constructor(salt: ByteArray, hmac: ByteArray, data: ByteArray) {
-        this.salt = salt
-        this.hmac = hmac
-        this.data = data
-    }
+/** The vault payload once hex decoded: `hex(salt)\nhex(hmac)\nhex(data)`. */
+class VaultContent(val salt: ByteArray, val hmac: ByteArray, val data: ByteArray) {
 
     fun toByteArray(): ByteArray {
-        return toString().toByteArray()
+        return toString().toByteArray(Charsets.UTF_8)
     }
 
     override fun toString(): String {
-        logger.debug(
-            "Salt: {} - HMAC: {} - Data: {} - TargetLen: {}",
-            salt.size, hmac.size, data.size, (salt.size + hmac.size + data.size) * 2
-        )
-        val saltString = encode(salt)
-        logger.debug("Salt String Length: {}", saltString.length)
-        val hmacString = encode(hmac)
-        logger.debug("HMAC String Length: {}", hmacString.length)
-        val dataString = encode(data, -1)
-        logger.debug("DATA String Length: {}", dataString.length)
-        val complete = """
-            $saltString
-            $hmacString
-            $dataString
-            """.trimIndent()
-        logger.debug("Complete: {} \n{}", complete.length, complete)
-        val result = encode(complete.toByteArray(), 80)
-        logger.debug("Result: [{}] {}\n{}", complete.length * 2, result.length, result)
-        return result
-    }
-
-    @Throws(IOException::class)
-    private fun getDataLengths(encodedData: ByteArray): IntArray {
-        val result = IntArray(3)
-
-        var idx = 0
-        var saltLen = 0
-        while (idx < encodedData.size && encodedData[idx] != '\n'.code.toByte()) {
-            saltLen++
-            idx++
-        }
-        // Skip the newline
-        idx++
-        if (idx == encodedData.size) {
-            throw IOException("Malformed data - salt incomplete")
-        }
-        result[0] = saltLen
-
-        var hmacLen = 0
-        while (idx < encodedData.size && encodedData[idx] != '\n'.code.toByte()) {
-            hmacLen++
-            idx++
-        }
-        // Skip the newline
-        idx++
-        if (idx == encodedData.size) {
-            throw IOException("Malformed data - hmac incomplete")
-        }
-        result[1] = hmacLen
-        var dataLen = 0
-        while (idx < encodedData.size) {
-            dataLen++
-            idx++
-        }
-        result[2] = dataLen
-
-        return result
-    }
-
-    @Throws(IOException::class)
-    private fun splitData(encodedData: ByteArray): Array<ByteArray?> {
-        val partsLength = getDataLengths(encodedData)
-
-        val result = arrayOfNulls<ByteArray>(3)
-
-        var idx = 0
-        var saltIdx = 0
-        result[0] = ByteArray(partsLength[0])
-        while (idx < encodedData.size && encodedData[idx] != '\n'.code.toByte()) {
-            result[0]!![saltIdx++] = encodedData[idx++]
-        }
-        // Skip the newline
-        idx++
-        if (idx == encodedData.size) {
-            throw IOException("Malformed data - salt incomplete")
-        }
-        var macIdx = 0
-        result[1] = ByteArray(partsLength[1])
-        while (idx < encodedData.size && encodedData[idx] != '\n'.code.toByte()) {
-            result[1]!![macIdx++] = encodedData[idx++]
-        }
-        // Skip the newline
-        idx++
-        if (idx == encodedData.size) {
-            throw IOException("Malformed data - hmac incomplete")
-        }
-        var dataIdx = 0
-        result[2] = ByteArray(partsLength[2])
-        while (idx < encodedData.size) {
-            result[2]!![dataIdx++] = encodedData[idx++]
-        }
-        return result
+        val complete = listOf(encode(salt, -1), encode(hmac, -1), encode(data, -1)).joinToString("\n")
+        return encode(complete.toByteArray(Charsets.UTF_8), LINE_LENGTH)
     }
 
     companion object {
-        private const val CHAR_ENCODING = "UTF-8"
+        private const val LINE_LENGTH = 80
+
+        @Throws(IOException::class)
+        operator fun invoke(encryptedVault: ByteArray): VaultContent {
+            val parts = String(encryptedVault, Charsets.UTF_8).split('\n', limit = 3)
+            if (parts.size < 2 || parts[0].isEmpty()) {
+                throw IOException("Malformed data - salt incomplete")
+            }
+            if (parts.size < 3 || parts[1].isEmpty()) {
+                throw IOException("Malformed data - hmac incomplete")
+            }
+            try {
+                return VaultContent(decode(parts[0]), decode(parts[1]), decode(parts[2]))
+            } catch (ex: IllegalArgumentException) {
+                throw IOException("Malformed data - not hexadecimal", ex)
+            }
+        }
     }
 }

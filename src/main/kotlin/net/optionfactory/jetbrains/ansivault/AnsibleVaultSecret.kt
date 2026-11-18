@@ -7,6 +7,7 @@ import net.optionfactory.jetbrains.ansivault.configuration.VaultSettings
 import net.optionfactory.jetbrains.ansivault.crypto.VaultHandler
 import net.optionfactory.jetbrains.ansivault.crypto.data.VaultInfo
 import net.optionfactory.jetbrains.ansivault.crypto.data.VaultInfo.Companion.DEFAULT_VAULT_ID
+import net.optionfactory.jetbrains.ansivault.crypto.decoders.WrongPasswordException
 import net.optionfactory.jetbrains.ansivault.ui.DialogBox
 import org.ini4j.Ini
 import java.io.File
@@ -93,7 +94,7 @@ class AnsibleVaultSecret(
             if (!path.exists() || !path.isRegularFile() || !path.isReadable()) {
                 return null
             }
-            return Files.readAllLines(path).firstOrNull()
+            return Files.readAllLines(path, Charsets.UTF_8).firstOrNull()?.trim()?.ifEmpty { null }
         }
     }
 
@@ -106,7 +107,7 @@ class AnsibleVaultSecret(
         ?: throw IOException("Multiple vault ids (${passwords.keys.joinToString()}): choose the one to encrypt with in Settings > Tools > AnsiVault Configuration")
         val password = passwords[id] ?: throw IOException("No password available for vault id '$id'")
         val indentation = "".padStart(indent)
-        val encryptedText = String(VaultHandler.encrypt(text.toByteArray(), password, vaultId = id))
+        val encryptedText = String(VaultHandler.encrypt(text.toByteArray(Charsets.UTF_8), password, vaultId = id), Charsets.UTF_8)
         return encryptedText.lines()
             .map { indentation + it }
             .joinToString("\n")
@@ -133,17 +134,20 @@ class AnsibleVaultSecret(
         var lastError: IOException? = null
         for (password in candidates) {
             try {
-                val clear = String(VaultHandler.decrypt(vaultText.toByteArray(), password))
+                val clear = String(VaultHandler.decrypt(vaultText.toByteArray(Charsets.UTF_8), password), Charsets.UTF_8)
                 return clear to AnsibleVaultSecret(mapOf(vaultId to password))
+            } catch (e: WrongPasswordException) {
+                lastError = lastError ?: e
             } catch (e: IOException) {
-                lastError = e
+                // a malformed vault fails the same way with any password
+                throw e
             }
         }
-        throw IOException("No vault password could decrypt vault id '$vaultId'" + (lastError?.message?.let { ": $it" } ?: ""), lastError)
+        throw WrongPasswordException("No vault password could decrypt vault id '$vaultId'" + (lastError?.message?.let { ": $it" } ?: ""))
     }
 
     /** Ansible settings: environment variable (ANSIBLE_ + upper case key) first, then the config files. */
-    private class AnsibleConfig(private val files: List<Path>, private val projectDir: Path) {
+    internal class AnsibleConfig(private val files: List<Path>, private val projectDir: Path) {
 
         /** A setting value and the directory relative paths in it are resolved against. */
         class Value(val value: String, private val baseDir: Path) {
@@ -153,7 +157,14 @@ class AnsibleVaultSecret(
             }
         }
 
-        private val inis = files.associateWith { Ini(it.toFile()) }
+        private val inis = files.associateWith { file ->
+            try {
+                Ini(file.toFile())
+            } catch (e: IOException) {
+                logger.warn("Unable to read ansible config $file", e)
+                null
+            }
+        }
 
         fun get(key: String): Value? {
             System.getenv("ANSIBLE_" + key.uppercase())?.let { return Value(it, projectDir) }
@@ -167,20 +178,37 @@ class AnsibleVaultSecret(
             fun load(project: Project): AnsibleConfig {
                 val projectDir = Path(project.basePath ?: ".")
                 val envConfig = System.getenv("ANSIBLE_CONFIG")?.let { Path(it) }
-                val projectConfig = project.basePath?.let { path ->
-                    File(path).walk(FileWalkDirection.TOP_DOWN)
-                        .asSequence()
-                        .filter { file -> file.isFile }
-                        .filter { file -> file.name == "ansible.cfg" }
-                        .map { file -> file.toPath() }
-                        .firstOrNull()
-                }
+                val projectConfig = project.basePath?.let { findProjectConfig(File(it)) }
                 val homeConfig = Path(System.getProperty("user.home")).resolve(".ansible.cfg")
                 val systemConfig = Path("/etc/ansible/ansible.cfg")
                 // same precedence as ansible: ANSIBLE_CONFIG, ./ansible.cfg, ~/.ansible.cfg, /etc/ansible/ansible.cfg
                 val files = listOfNotNull(envConfig, projectConfig, homeConfig, systemConfig)
                     .filter { it.exists() && it.isRegularFile() }
                 return AnsibleConfig(files, projectDir)
+            }
+
+            private const val CONFIG_FILE = "ansible.cfg"
+            private const val MAX_DEPTH = 5
+            private val SKIPPED_DIRS = setOf("node_modules", "build", "target", "out", "dist", "venv", "__pycache__")
+
+            /**
+             * The project root ansible.cfg, or the shallowest one in the project (breadth first,
+             * at most [MAX_DEPTH] levels, skipping hidden and build/dependency directories).
+             */
+            fun findProjectConfig(root: File): Path? {
+                var level = listOf(root)
+                repeat(MAX_DEPTH + 1) {
+                    level.map { File(it, CONFIG_FILE) }.firstOrNull { it.isFile }?.let { return it.toPath() }
+                    level = level.flatMap { dir ->
+                        dir.listFiles { file -> file.isDirectory && !file.name.startsWith(".") && file.name !in SKIPPED_DIRS }
+                            .orEmpty()
+                            .sortedBy { it.name }
+                    }
+                    if (level.isEmpty()) {
+                        return null
+                    }
+                }
+                return null
             }
         }
     }
