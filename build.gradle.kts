@@ -105,7 +105,8 @@ intellijPlatform {
 
     pluginVerification {
         ides {
-            recommended()
+            val only = providers.gradleProperty("verifyIde").orNull
+            if (only == null) recommended() else only.split(":").let { (type, version) -> create(type, version) }
         }
     }
 }
