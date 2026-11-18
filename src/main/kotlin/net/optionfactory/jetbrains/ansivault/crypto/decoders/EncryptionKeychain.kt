@@ -9,8 +9,8 @@ import javax.crypto.spec.PBEKeySpec
 class EncryptionKeychain(
     val salt: ByteArray,
     password: String,
-    private val keylen: Int,
-    private val ivlen: Int,
+    keylen: Int,
+    ivlen: Int,
     iterations: Int,
     algo: String,
 ) {
