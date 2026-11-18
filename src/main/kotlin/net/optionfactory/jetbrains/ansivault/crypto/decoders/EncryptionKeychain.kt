@@ -1,91 +1,54 @@
 package net.optionfactory.jetbrains.ansivault.crypto.decoders
 
-import de.rtner.security.auth.spi.PBKDF2Engine
-import de.rtner.security.auth.spi.PBKDF2Parameters
 import java.io.IOException
 import java.security.SecureRandom
-import java.util.*
+import javax.crypto.SecretKeyFactory
+import javax.crypto.spec.PBEKeySpec
 
-class EncryptionKeychain {
-    private val password: String?
-    val salt: ByteArray
-    private val keylen: Int
-    private val ivlen: Int
-    private val iterations: Int
-    private val algo: String
+/** Keys derived with PBKDF2 from the vault password: encryption key, HMAC key and IV, in this order. */
+class EncryptionKeychain(
+    val salt: ByteArray,
+    password: String,
+    keylen: Int,
+    ivlen: Int,
+    iterations: Int,
+    algo: String,
+) {
+    val encryptionKey: ByteArray
+    val hmacKey: ByteArray
+    val iv: ByteArray
 
-    var encryptionKey: ByteArray
-        private set
-    var hmacKey: ByteArray
-        private set
-    var iv: ByteArray
-        private set
+    constructor(saltLen: Int, password: String, keylen: Int, ivlen: Int, iterations: Int, algo: String) :
+        this(generateSalt(saltLen), password, keylen, ivlen, iterations, algo)
 
-
-    constructor(salt: ByteArray, password: String, keylen: Int, ivlen: Int, iterations: Int, algo: String) {
-        this.password = password
-        this.salt = salt
-        this.keylen = keylen
-        this.ivlen = ivlen
-        this.iterations = iterations
-        this.algo = algo
-        val rawkeys = createRawKey()
-        this.encryptionKey = getEncryptionKey(rawkeys)
-        this.hmacKey = getHMACKey(rawkeys)
-        this.iv = getIV(rawkeys)
+    init {
+        val rawKeys = deriveKey(password, salt, iterations, algo, 2 * keylen + ivlen)
+        encryptionKey = rawKeys.copyOfRange(0, keylen)
+        hmacKey = rawKeys.copyOfRange(keylen, 2 * keylen)
+        iv = rawKeys.copyOfRange(2 * keylen, 2 * keylen + ivlen)
+        rawKeys.fill(0)
     }
-
-    constructor(saltLen: Int, password: String?, keylen: Int, ivlen: Int, iterations: Int, algo: String) {
-        this.password = password
-        this.salt = generateSalt(saltLen)
-        this.keylen = keylen
-        this.ivlen = ivlen
-        this.iterations = iterations
-        this.algo = algo
-        val rawkeys = createRawKey()
-        this.encryptionKey = getEncryptionKey(rawkeys)
-        this.hmacKey = getHMACKey(rawkeys)
-        this.iv = getIV(rawkeys)
-    }
-
-
-    @Throws(IOException::class)
-    private fun createRawKey(): ByteArray {
-        try {
-            val params = PBKDF2Parameters(algo, CHAR_ENCODING, salt, iterations)
-            val keylength = ivlen + 2 * keylen
-            val pbkdf2Engine = PBKDF2Engine(params)
-            val keys = pbkdf2Engine.deriveKey(password, keylength)
-            return keys
-        } catch (ex: Exception) {
-            throw IOException("Cryptofailure: " + ex.message)
-        }
-    }
-
-
-    private fun getEncryptionKey(keys: ByteArray): ByteArray {
-        val result = Arrays.copyOfRange(keys, 0, keylen)
-        return result
-    }
-
-    private fun getHMACKey(keys: ByteArray): ByteArray {
-        val result = Arrays.copyOfRange(keys, keylen, keylen * 2)
-        return result
-    }
-
-    private fun getIV(keys: ByteArray): ByteArray {
-        val result = Arrays.copyOfRange(keys, keylen * 2, keylen * 2 + ivlen)
-        return result
-    }
-
-    private fun generateSalt(length: Int): ByteArray {
-        val salt = ByteArray(length)
-        SecureRandom().nextBytes(salt)
-        return salt
-    }
-
 
     companion object {
-        private const val CHAR_ENCODING = "UTF-8"
+        private val random = SecureRandom()
+
+        private fun generateSalt(length: Int): ByteArray {
+            return ByteArray(length).also { random.nextBytes(it) }
+        }
+
+        /** The JDK PBKDF2 encodes the password as UTF-8, like ansible. */
+        @Throws(IOException::class)
+        private fun deriveKey(password: String, salt: ByteArray, iterations: Int, algo: String, length: Int): ByteArray {
+            val chars = password.toCharArray()
+            val spec = PBEKeySpec(chars, salt, iterations, length * 8)
+            try {
+                return SecretKeyFactory.getInstance("PBKDF2With$algo").generateSecret(spec).encoded
+            } catch (ex: Exception) {
+                throw IOException("Cryptofailure: " + ex.message, ex)
+            } finally {
+                spec.clearPassword()
+                chars.fill('\u0000')
+            }
+        }
     }
 }

@@ -15,7 +15,7 @@ class ProjectConfigurable(private val project: Project) : Configurable {
     @Nls(capitalization = Nls.Capitalization.Title)
     override fun getDisplayName(): String {
 
-        return "Ansivault Configuration"
+        return "AnsiVault Configuration"
     }
 
     override fun getPreferredFocusedComponent(): JComponent {

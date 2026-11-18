@@ -4,7 +4,7 @@ import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 
 plugins {
     id("java") // Java support
-    alias(libs.plugins.kotlin) version "2.1.10"  // Kotlin support
+    alias(libs.plugins.kotlin) // Kotlin support
     alias(libs.plugins.intelliJPlatform) // IntelliJ Platform Gradle Plugin
     alias(libs.plugins.changelog) // Gradle Changelog Plugin
     alias(libs.plugins.qodana) // Gradle Qodana Plugin
@@ -49,10 +49,6 @@ dependencies {
         testFramework(TestFrameworkType.Platform)
     }
     implementation("org.jetbrains.intellij.deps:ini4j:0.5.5-2")
-    implementation("de.rtner:PBKDF2:1.1.4"){
-        exclude("org.jboss.logging")
-        exclude("org.picketbox")
-    }
 }
 
 // Configure IntelliJ Platform Gradle Plugin - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-extension.html
@@ -109,7 +105,8 @@ intellijPlatform {
 
     pluginVerification {
         ides {
-            recommended()
+            val only = providers.gradleProperty("verifyIde").orNull
+            if (only == null) recommended() else only.split(":").let { (type, version) -> create(type, version) }
         }
     }
 }

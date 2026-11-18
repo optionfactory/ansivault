@@ -1,8 +1,10 @@
 package net.optionfactory.jetbrains.ansivault
 
+import net.optionfactory.jetbrains.ansivault.crypto.decoders.WrongPasswordException
 import org.junit.Assert
 import org.junit.Test
 import java.io.IOException
+import java.nio.file.Files
 
 class AnsibleVaultSecretTest {
     @Test
@@ -95,5 +97,33 @@ class AnsibleVaultSecretTest {
             listOf("dev" to "~/.dev", "prod" to "prompt", "team" to "plain.txt"),
             AnsibleVaultSecret.parseVaultIdentityList(" dev@~/.dev, prod@prompt ,plain.txt, bad;id@x,", "team"),
         )
+    }
+
+    @Test(expected = WrongPasswordException::class)
+    fun `wrong passwords are reported as such`() {
+        AnsibleVaultSecret(mapOf("dev" to "a", "prod" to "b")).decrypt(vaultWithId)
+    }
+
+    @Test
+    fun `a malformed vault is not a wrong password`() {
+        try {
+            AnsibleVaultSecret("secret").decrypt("${'$'}ANSIBLE_VAULT;1.1;AES256\nzz")
+            Assert.fail()
+        } catch (e: IOException) {
+            Assert.assertFalse(e is WrongPasswordException)
+        }
+    }
+
+    @Test
+    fun `finds the shallowest ansible cfg skipping hidden and dependency directories`() {
+        val root = Files.createTempDirectory("ansivault-cfg")
+        Files.createDirectories(root.resolve(".git/x")).resolve("ansible.cfg").toFile().writeText("")
+        Files.createDirectories(root.resolve("node_modules")).resolve("ansible.cfg").toFile().writeText("")
+        Files.createDirectories(root.resolve("b/deep/er")).resolve("ansible.cfg").toFile().writeText("")
+        val expected = Files.createDirectories(root.resolve("infra/ansible")).resolve("ansible.cfg").also { it.toFile().writeText("") }
+        Assert.assertEquals(expected, AnsibleVaultSecret.AnsibleConfig.findProjectConfig(root.toFile()))
+
+        root.resolve("ansible.cfg").toFile().writeText("")
+        Assert.assertEquals(root.resolve("ansible.cfg"), AnsibleVaultSecret.AnsibleConfig.findProjectConfig(root.toFile()))
     }
 }

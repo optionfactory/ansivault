@@ -86,4 +86,25 @@
 - Encrypt/decrypt errors are shown in a dialog instead of the IDE error reporter
 
 ## [Unreleased]
-### In development
+### Fixed
+- Closing the vault editor tab re-encrypts the text if it changed, even without saving; an error is shown if the vault can no longer be written back
+- "Ansible Encrypt" no longer asks the passwords when nothing is selected, and is disabled without a selection
+- Indentation of an inline vault uses the real column of the selection (was the visual one, wrong with soft wraps and folding)
+- `!vault |-`, `!vault |+` and trailing spaces are recognised when decrypting a selection
+- Vault password files are trimmed, like ansible
+- A malformed `ansible.cfg` is logged instead of breaking encryption
+### Changed
+- A wrong saved password can be forgotten and typed again right from the error dialog
+- `ansible.cfg` lookup in the project is bounded and skips hidden and build/dependency directories
+- Gutter icons are refreshed when typing pauses, only for file editors
+- Vaults are written in lower case hex, like `ansible-vault`
+- Constant time HMAC comparison and strict PKCS#7 padding check
+- Key derivation uses the JDK PBKDF2: dropped the `de.rtner:PBKDF2` dependency
+- Removed dead code (JCE policy check, stub `AES` cypher, unused stream APIs)
+### Build
+- The Kotlin plugin version comes from the version catalog (an inline version overrode it)
+- `gradleVersion` aligned with the wrapper (9.9.1)
+- `AnsivaultIT` runs whenever `ansible-vault` is installed; CI installs it
+- `verifyPlugin` can target a single IDE with `-PverifyIde=<type>:<version>` (e.g. `-PverifyIde=IU:2026.3`), default still the recommended IDEs
+### Verified
+- Plugin Verifier: compatible, with no deprecated, experimental, internal or override-only API usages, with IC 2024.3.7.1, 2025.1.7.2, 2025.2.6.4 and IU 2025.3.6.2, 2026.1.5.1, 2026.2.5, 2026.3
