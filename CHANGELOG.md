@@ -105,3 +105,6 @@
 - The Kotlin plugin version comes from the version catalog (an inline version overrode it)
 - `gradleVersion` aligned with the wrapper (9.9.1)
 - `AnsivaultIT` runs whenever `ansible-vault` is installed; CI installs it
+- `verifyPlugin` can target a single IDE with `-PverifyIde=<type>:<version>` (e.g. `-PverifyIde=IU:2026.3`), default still the recommended IDEs
+### Verified
+- Plugin Verifier: compatible, with no deprecated, experimental, internal or override-only API usages, with IC 2024.3.7.1, 2025.1.7.2, 2025.2.6.4 and IU 2025.3.6.2, 2026.1.5.1, 2026.2.5, 2026.3
