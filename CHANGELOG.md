@@ -85,7 +85,7 @@
 - Selecting a 1.2 vault and running "Ansible Encrypt" encrypted it a second time
 - Encrypt/decrypt errors are shown in a dialog instead of the IDE error reporter
 
-## [Unreleased]
+## [0.0.15]
 ### Fixed
 - Closing the vault editor tab re-encrypts the text if it changed, even without saving; an error is shown if the vault can no longer be written back
 - "Ansible Encrypt" no longer asks the passwords when nothing is selected, and is disabled without a selection
@@ -108,3 +108,6 @@
 - `verifyPlugin` can target a single IDE with `-PverifyIde=<type>:<version>` (e.g. `-PverifyIde=IU:2026.3`), default still the recommended IDEs
 ### Verified
 - Plugin Verifier: compatible, with no deprecated, experimental, internal or override-only API usages, with IC 2024.3.7.1, 2025.1.7.2, 2025.2.6.4 and IU 2025.3.6.2, 2026.1.5.1, 2026.2.5, 2026.3
+
+## [Unreleased]
+### In development
