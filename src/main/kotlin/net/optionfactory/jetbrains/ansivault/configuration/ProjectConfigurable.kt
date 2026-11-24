@@ -40,6 +40,7 @@ class ProjectConfigurable(private val project: Project) : Configurable {
         val state = VaultSettings.getInstance(project).state
         state.editorPlacement = component.selectedPlacement
         state.encryptVaultId = component.encryptVaultId.text.trim()
+        component.refreshLookup()
     }
 
     override fun reset() {

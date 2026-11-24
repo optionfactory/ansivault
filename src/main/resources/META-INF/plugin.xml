@@ -16,6 +16,7 @@
         <editorFactoryListener implementation="net.optionfactory.jetbrains.ansivault.gutter.VaultGutterListener"/>
         <projectService serviceImplementation="net.optionfactory.jetbrains.ansivault.ui.VaultFragmentService"/>
         <projectService serviceImplementation="net.optionfactory.jetbrains.ansivault.configuration.VaultSettings"/>
+        <notificationGroup id="AnsiVault" displayType="BALLOON"/>
     </extensions>
     <actions>
         <group id="ansivault">
@@ -24,9 +25,13 @@
 
         <action id="Ansivault.Vault"
                 class="net.optionfactory.jetbrains.ansivault.actions.VaultAction"
-                text="Ansible Encrypt"
+                text="Ansible Vault Encrypt/Decrypt"
+                description="Encrypt or decrypt the selection; without a selection, open the vault at the caret or encrypt the YAML value at the caret"
                 icon="/icons/icon.svg">
             <add-to-group group-id="ansivault" anchor="first"/>
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+            <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt shift A"/>
+            <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="meta alt shift A"/>
         </action>
 
 

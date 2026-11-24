@@ -3,7 +3,6 @@ package net.optionfactory.jetbrains.ansivault
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import net.optionfactory.jetbrains.ansivault.configuration.CredentialManager
-import net.optionfactory.jetbrains.ansivault.configuration.VaultSettings
 import net.optionfactory.jetbrains.ansivault.crypto.VaultHandler
 import net.optionfactory.jetbrains.ansivault.crypto.data.VaultInfo
 import net.optionfactory.jetbrains.ansivault.crypto.data.VaultInfo.Companion.DEFAULT_VAULT_ID
@@ -34,30 +33,27 @@ class AnsibleVaultSecret(
 
     companion object {
         val logger = Logger.getInstance(AnsibleVaultSecret::class.java)
-        private const val PROMPT = "prompt"
+        internal const val PROMPT = "prompt"
 
-        fun search(project: Project): AnsibleVaultSecret? {
-            val config = AnsibleConfig.load(project)
-            val defaultVaultId = config.get("vault_identity")?.value ?: DEFAULT_VAULT_ID
-            val identityList = config.get("vault_identity_list")
-            val passwordFile = config.get("vault_password_file")
-            // vault id -> password file, null = prompt; same order as ansible: identity list, then password file
-            val sources = identityList?.let { list ->
-                parseVaultIdentityList(list.value, defaultVaultId).map { (id, source) -> id to list.resolve(source) }
-            }.orEmpty() + listOfNotNull(passwordFile?.let { defaultVaultId to it.resolve(it.value) })
-
+        /**
+         * The passwords of the project, read from their files or the credential store, asking the missing ones.
+         * With [forEncryption] only the password of the vault id used to encrypt is needed (and asked).
+         */
+        fun search(project: Project, forEncryption: Boolean = false): AnsibleVaultSecret? {
+            val lookup = VaultLookup.resolve(project)
+            val encryptVaultId = lookup.encryptVaultId?.vaultId
+            val needed = lookup.sources
+                .filter { !forEncryption || it.vaultId == encryptVaultId }
+                .ifEmpty { lookup.sources }
             val passwords = linkedMapOf<String, String>()
             val toAsk = mutableListOf<String>()
-            sources.ifEmpty { listOf(defaultVaultId to null) }.forEach { (vaultId, file) ->
-                if (vaultId in passwords || vaultId in toAsk) {
-                    return@forEach
+            needed.forEach { source ->
+                val fromFile = source.file?.let { readPasswordFile(it) }
+                if (source.file != null && fromFile == null) {
+                    logger.warn("Vault password file for '${source.vaultId}' not readable: ${source.file}")
                 }
-                val fromFile = file?.let { readPasswordFile(it) }
-                if (file != null && fromFile == null) {
-                    logger.warn("Vault password file for '$vaultId' not readable: $file")
-                }
-                val password = fromFile ?: CredentialManager.getPassword(project, vaultId)
-                if (password != null) passwords[vaultId] = password else toAsk.add(vaultId)
+                val password = fromFile ?: CredentialManager.getPassword(project, source.vaultId)
+                if (password != null) passwords[source.vaultId] = password else toAsk.add(source.vaultId)
             }
             if (toAsk.isNotEmpty()) {
                 if (!DialogBox(project, toAsk).showAndGet()) {
@@ -67,9 +63,8 @@ class AnsibleVaultSecret(
             }
             return AnsibleVaultSecret(
                 passwords = passwords,
-                encryptVaultId = VaultSettings.getInstance(project).state.encryptVaultId.ifBlank { null }
-                    ?: config.get("vault_encrypt_identity")?.value,
-                vaultIdMatch = config.get("vault_id_match")?.value?.lowercase() in setOf("true", "yes", "on", "1", "y", "t"),
+                encryptVaultId = encryptVaultId,
+                vaultIdMatch = lookup.vaultIdMatch,
             )
         }
 
@@ -90,7 +85,7 @@ class AnsibleVaultSecret(
         }
 
         // shortcut: executable password files (scripts / *-client) are read as text, not executed
-        private fun readPasswordFile(path: Path): String? {
+        internal fun readPasswordFile(path: Path): String? {
             if (!path.exists() || !path.isRegularFile() || !path.isReadable()) {
                 return null
             }
@@ -147,15 +142,30 @@ class AnsibleVaultSecret(
     }
 
     /** Ansible settings: environment variable (ANSIBLE_ + upper case key) first, then the config files. */
-    internal class AnsibleConfig(private val files: List<Path>, private val projectDir: Path) {
+    internal class AnsibleConfig(
+        /** The config files ansible would consider, in precedence order, found or not. */
+        val candidates: List<Candidate>,
+        private val projectDir: Path,
+        private val env: (String) -> String?,
+    ) {
 
-        /** A setting value and the directory relative paths in it are resolved against. */
-        class Value(val value: String, private val baseDir: Path) {
+        /** A config file location: [path] is null when it is not set (ANSIBLE_CONFIG) or not found (project). */
+        class Candidate(val label: String, val path: Path?) {
+            val exists: Boolean = path != null && path.exists() && path.isRegularFile()
+        }
+
+        /**
+         * A setting value, where it comes from ([origin]: an environment variable or a config file)
+         * and the directory relative paths in it are resolved against.
+         */
+        class Value(val value: String, private val baseDir: Path, val origin: String) {
             /** Resolves a password file path; null for ansible's `prompt`. */
             fun resolve(path: String): Path? {
                 return if (path == PROMPT) null else baseDir.resolve(path.replaceFirst(Regex("^~"), System.getProperty("user.home")))
             }
         }
+
+        val files: List<Path> = candidates.filter { it.exists }.mapNotNull { it.path }
 
         private val inis = files.associateWith { file ->
             try {
@@ -167,24 +177,28 @@ class AnsibleVaultSecret(
         }
 
         fun get(key: String): Value? {
-            System.getenv("ANSIBLE_" + key.uppercase())?.let { return Value(it, projectDir) }
+            val envName = "ANSIBLE_" + key.uppercase()
+            env(envName)?.let { return Value(it, projectDir, "environment variable $envName") }
             // shortcut: ansible reads only the first config file found, here each key falls back to the next file
             return files.firstNotNullOfOrNull { file ->
-                inis[file]?.get("defaults")?.get(key)?.let { Value(it, file.toAbsolutePath().parent) }
+                inis[file]?.get("defaults")?.get(key)?.let { Value(it, file.toAbsolutePath().parent, file.toString()) }
             }
         }
 
         companion object {
             fun load(project: Project): AnsibleConfig {
-                val projectDir = Path(project.basePath ?: ".")
-                val envConfig = System.getenv("ANSIBLE_CONFIG")?.let { Path(it) }
-                val projectConfig = project.basePath?.let { findProjectConfig(File(it)) }
-                val homeConfig = Path(System.getProperty("user.home")).resolve(".ansible.cfg")
-                val systemConfig = Path("/etc/ansible/ansible.cfg")
-                // same precedence as ansible: ANSIBLE_CONFIG, ./ansible.cfg, ~/.ansible.cfg, /etc/ansible/ansible.cfg
-                val files = listOfNotNull(envConfig, projectConfig, homeConfig, systemConfig)
-                    .filter { it.exists() && it.isRegularFile() }
-                return AnsibleConfig(files, projectDir)
+                return load(project.basePath?.let { Path(it) }, System::getenv, Path(System.getProperty("user.home")))
+            }
+
+            /** Same precedence as ansible: ANSIBLE_CONFIG, ./ansible.cfg, ~/.ansible.cfg, /etc/ansible/ansible.cfg */
+            fun load(projectDir: Path?, env: (String) -> String?, home: Path): AnsibleConfig {
+                val candidates = listOf(
+                    Candidate("ANSIBLE_CONFIG", env("ANSIBLE_CONFIG")?.let { Path(it) }),
+                    Candidate("Project", projectDir?.let { findProjectConfig(it.toFile()) }),
+                    Candidate("User", home.resolve(".ansible.cfg")),
+                    Candidate("System", Path("/etc/ansible/ansible.cfg")),
+                )
+                return AnsibleConfig(candidates, projectDir ?: Path("."), env)
             }
 
             private const val CONFIG_FILE = "ansible.cfg"

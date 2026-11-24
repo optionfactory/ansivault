@@ -55,6 +55,27 @@ object VaultBlocks {
         )
     }
 
+    /** `key: !vault |` (also `|-`, `|+`): the line before an inline vault header. */
+    private val INLINE_TAG_LINE = Regex("""!vault\s*\|[-+]?\s*$""")
+
+    /**
+     * The header line of the vault [line] belongs to: the header itself, one of its hex lines,
+     * or the `key: !vault |` line before it; null when [line] is not part of a vault.
+     */
+    fun enclosingHeader(lines: List<CharSequence>, line: Int): Int? {
+        if (line !in lines.indices) {
+            return null
+        }
+        if (line + 1 < lines.size && INLINE_TAG_LINE.containsMatchIn(lines[line]) && isHeader(lines[line + 1])) {
+            return line + 1
+        }
+        var current = line
+        while (current >= 0 && !isHeader(lines[current]) && HEX_LINE.matches(lines[current].trim())) {
+            current--
+        }
+        return current.takeIf { it >= 0 && isHeader(lines[it]) }
+    }
+
     /** The dotted path of YAML keys enclosing [headerLine], e.g. `db.credentials.password`. */
     fun keyPath(lines: List<CharSequence>, headerLine: Int): String {
         val keys = mutableListOf<String>()

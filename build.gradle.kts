@@ -106,7 +106,13 @@ intellijPlatform {
     pluginVerification {
         ides {
             val only = providers.gradleProperty("verifyIde").orNull
-            if (only == null) recommended() else only.split(":").let { (type, version) -> create(type, version) }
+            if (only == null) {
+                recommended()
+            } else {
+                val parts = only.split(":")
+                if (parts.size != 2) throw GradleException("-PverifyIde must be <type>:<version>, e.g. -PverifyIde=IU:2026.3 (was '$only')")
+                create(parts[0], parts[1])
+            }
         }
     }
 }
