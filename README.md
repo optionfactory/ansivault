@@ -31,6 +31,14 @@ Vaults encrypted with the `default` vault id are written as `$ANSIBLE_VAULT;1.1`
 The vault id used to encrypt can be chosen per project in Settings, overriding `vault_encrypt_identity`;
 editing an existing vault keeps its vault id, like `ansible-vault edit`.
 
+**Ansible Vault Encrypt/Decrypt** (<kbd>Ctrl+Alt+Shift+A</kbd>, <kbd>⌘⌥⇧A</kbd> on macOS, also in the editor context menu and in <kbd>Tools</kbd>):
+- with a selection: encrypts it, or decrypts it when it is a vault;
+- on a vault (or its `key: !vault |` line): opens it decrypted in an editor, encrypted back when saved or closed; the gutter icon does the same;
+- on a `key: value` line: encrypts the value as an inline `!vault |`.
+
+<kbd>Settings</kbd> > <kbd>Tools</kbd> > <kbd>AnsiVault Configuration</kbd> shows where the vault passwords come from:
+the config files in search order, the vault settings and where each one is defined, the password source of each vault id.
+
 <!-- Plugin description end -->
 
 ## Installation

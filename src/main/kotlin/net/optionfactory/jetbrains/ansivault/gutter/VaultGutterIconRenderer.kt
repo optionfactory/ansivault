@@ -22,7 +22,9 @@ class VaultGutterIconRenderer(
 
     override fun getClickAction(): AnAction = object : AnAction() {
         override fun actionPerformed(event: AnActionEvent) {
-            VaultFragmentService.getInstance(project).open(editor, marker)
+            if (marker.isValid) {
+                VaultFragmentService.getInstance(project).open(editor, editor.document.getLineNumber(marker.startOffset))
+            }
         }
     }
 

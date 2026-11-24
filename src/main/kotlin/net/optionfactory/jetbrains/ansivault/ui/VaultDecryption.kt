@@ -1,13 +1,21 @@
 package net.optionfactory.jetbrains.ansivault.ui
 
+import com.intellij.notification.NotificationAction
+import com.intellij.notification.NotificationGroupManager
+import com.intellij.notification.NotificationType
+import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.Messages
 import net.optionfactory.jetbrains.ansivault.AnsibleVaultSecret
 import net.optionfactory.jetbrains.ansivault.configuration.CredentialManager
+import net.optionfactory.jetbrains.ansivault.configuration.ProjectConfigurable
 import net.optionfactory.jetbrains.ansivault.crypto.decoders.WrongPasswordException
 
 object VaultDecryption {
     const val TITLE = "Ansible Vault"
+
+    /** Declared in plugin.xml. */
+    const val NOTIFICATION_GROUP = "AnsiVault"
 
     /**
      * Decrypts [vaultText] with the project passwords, see [AnsibleVaultSecret.decryptForEdit].
@@ -41,7 +49,14 @@ object VaultDecryption {
         }
     }
 
+    /** A non blocking error notification, with a link to the settings showing where the passwords come from. */
     fun showError(project: Project, e: Exception) {
-        Messages.showErrorDialog(project, e.message ?: "Unable to process the vault", TITLE)
+        NotificationGroupManager.getInstance()
+            .getNotificationGroup(NOTIFICATION_GROUP)
+            .createNotification(TITLE, e.message ?: "Unable to process the vault", NotificationType.ERROR)
+            .addAction(NotificationAction.createSimple("Vault password settings") {
+                ShowSettingsUtil.getInstance().showSettingsDialog(project, ProjectConfigurable::class.java)
+            })
+            .notify(project)
     }
 }

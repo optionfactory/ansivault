@@ -41,4 +41,17 @@ class VaultBlocksTest {
         assertEquals("db.name.credentials.password", VaultBlocks.keyPath(yaml, 6))
         assertEquals("api key", VaultBlocks.keyPath(yaml, 11))
     }
+
+    @Test
+    fun `finds the vault at the caret line`() {
+        assertEquals(6, VaultBlocks.enclosingHeader(yaml, 5))
+        assertEquals(6, VaultBlocks.enclosingHeader(yaml, 6))
+        assertEquals(6, VaultBlocks.enclosingHeader(yaml, 8))
+        assertEquals(11, VaultBlocks.enclosingHeader(yaml, 10))
+        assertEquals(11, VaultBlocks.enclosingHeader(yaml, 12))
+        assertNull(VaultBlocks.enclosingHeader(yaml, 9))
+        assertNull(VaultBlocks.enclosingHeader(yaml, 4))
+        assertNull(VaultBlocks.enclosingHeader(yaml, 13))
+        assertNull(VaultBlocks.enclosingHeader(yaml, 99))
+    }
 }

@@ -8,7 +8,6 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.RangeMarker
-import com.intellij.openapi.editor.markup.RangeHighlighter
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileDocumentManagerListener
 import com.intellij.openapi.fileEditor.FileEditorManager
@@ -16,6 +15,7 @@ import com.intellij.openapi.fileEditor.FileEditorManagerListener
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.fileEditor.ex.FileEditorManagerEx
 import com.intellij.openapi.fileEditor.impl.FileDocumentManagerBase
+import com.intellij.openapi.fileTypes.FileType
 import com.intellij.openapi.fileTypes.PlainTextFileType
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.Messages
@@ -52,17 +52,15 @@ class VaultFragmentService(private val project: Project) : Disposable {
         })
     }
 
-    fun open(editor: Editor, marker: RangeHighlighter) {
-        if (!marker.isValid) {
-            return
-        }
+    /** Opens the vault whose header is at [headerLine] of [editor] in a vault editor, decrypted. */
+    fun open(editor: Editor, headerLine: Int) {
         val document = editor.document
-        val block = VaultBlocks.at(document, document.getLineNumber(marker.startOffset)) ?: return
+        val block = VaultBlocks.at(document, headerLine) ?: return
         if (fragments.values.any { it.range.isValid && it.range.document === document && it.range.startOffset == block.startOffset }) {
             return
         }
         val (plainText, editSecret) = VaultDecryption.decryptForEdit(project, block.vaultText) ?: return
-        val file = LightVirtualFile(tabName(document, block), PlainTextFileType.INSTANCE, plainText)
+        val file = LightVirtualFile(tabName(document, block), fileType(document, block), plainText)
         file.putUserData(FileDocumentManagerBase.TRACK_NON_PHYSICAL, true)
         val fragmentDocument = FileDocumentManager.getInstance().getDocument(file) ?: return
         fragments[file] = VaultFragment(
@@ -91,6 +89,16 @@ class VaultFragmentService(private val project: Project) : Disposable {
         }
         val fileIsSecondaryComponent = placement == VaultEditorPlacement.SPLIT_RIGHT || placement == VaultEditorPlacement.SPLIT_BOTTOM
         window.split(orientation, true, file, true, fileIsSecondaryComponent)
+    }
+
+    /**
+     * A whole file vault (e.g. `group_vars/all/vault.yml`) is edited with the type of the file, for its highlighting;
+     * an inline vault is a YAML string value, edited as plain text.
+     */
+    private fun fileType(document: Document, block: VaultBlock): FileType {
+        val wholeFile = block.startOffset == 0 && document.immutableCharSequence.subSequence(block.endOffset, document.textLength).isBlank()
+        val sourceFile = FileDocumentManager.getInstance().getFile(document)
+        return if (wholeFile && sourceFile != null) sourceFile.fileType else PlainTextFileType.INSTANCE
     }
 
     private fun tabName(document: Document, block: VaultBlock): String {
