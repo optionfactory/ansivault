@@ -5,3 +5,6 @@
 build
 .kotlin
 .junie
+
+# IDE files created when opening the playground as a project
+/playground/.idea/

@@ -115,10 +115,17 @@
 - Without a selection the action works on the caret line: on a vault it opens the vault editor, on a `key: value` YAML line it encrypts the value as an inline vault (quotes and trailing comments handled)
 - Settings show where the vault passwords come from: config files in search order, vault settings and their origin, password source of each vault id, vault id used to encrypt
 - Error notifications link to the settings
+- "Forget Password of Selected Vault Id" in the settings tree forgets the saved password of one vault id only
+- `playground/`: a small ansible project with a checklist to try every feature by hand
+- README: usage, configuration, settings, troubleshooting, limitations, compatibility and development
 ### Changed
 - Errors are non blocking notifications instead of dialogs
 - A whole file vault is edited with the file type of the original file (e.g. YAML highlighting); inline vaults stay plain text
 - Encrypting asks only the password of the vault id used to encrypt, not all the `prompt` ones
+- Decrypting asks first only the password of the vault's own vault id; the others are tried (and asked) only if it fails
+- A wrong password is offered to be typed again only when it is the one saved in the credential store for that vault id, and only that one is forgotten; a wrong password from a file is reported as an error
+### Fixed
+- The settings page no longer reads the credential store on the UI thread ("Slow operations are prohibited on EDT")
 - "Ansible Encrypt" is now "Ansible Vault Encrypt/Decrypt"
 ### Build
 - `-PverifyIde` reports a malformed value instead of failing with an index error

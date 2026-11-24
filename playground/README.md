@@ -55,13 +55,15 @@ The shortcut is <kbd>Ctrl+Alt+Shift+A</kbd> (<kbd>⌘⌥⇧A</kbd> on macOS); th
 
 ### Vault editor
 
-- [ ] Click the gutter icon on `api_key` (or caret on it + shortcut): an editor opens on the right, tab `[AnsiVault] vars.yml: app.api_key`, text `dev-api-key-value`.
+- [ ] Click the gutter icon on `api_key` (or caret on it + shortcut): an editor opens on the right, tab `[AnsiVault] vars.yml: app.api_key`,
+  text `dev-api-key-value`; the prod password is **not** asked (only the vault's own vault id is needed).
 - [ ] Change the text and **close the tab without saving**: the vault in `vars.yml` is re-encrypted (the hex changes, still `;dev`).
 - [ ] Open it again, change the text and save (<kbd>Ctrl+S</kbd>): re-encrypted at once.
 - [ ] Open it and close it without changes: `vars.yml` is untouched.
 - [ ] `nested.deeply.hidden`: the tab shows the key path, the text has three lines.
 - [ ] `strip_chomping` (`!vault |-`): opens like the others.
-- [ ] `legacy_token` (`$ANSIBLE_VAULT;1.1`, no vault id): opens with the dev password; after editing it stays a 1.1 vault.
+- [ ] `legacy_token` (`$ANSIBLE_VAULT;1.1`, no vault id): every password is tried, so prod may be asked; it opens with the dev password
+  and after editing it stays a 1.1 vault.
 - [ ] `group_vars/all/vault.yml`: the whole file vault opens with **YAML highlighting**.
 - [ ] Change "Where to open the vault editor" in the settings (left, top, bottom, new tab) and open a vault again.
 - [ ] While a vault editor is open, delete the vault in `vars.yml`, then edit and save the vault editor: an error says the changes cannot be written back.
@@ -69,12 +71,14 @@ The shortcut is <kbd>Ctrl+Alt+Shift+A</kbd> (<kbd>⌘⌥⇧A</kbd> on macOS); th
 ### prod: asked password and wrong password
 
 - [ ] Open `prod_api_key` (or `vault_prod.yml`): a dialog asks the `prod` password; type `prod-password`: it opens, and the next time it is not asked.
-- [ ] **Forget Saved Passwords**, open `prod_api_key` again and type a wrong password: a dialog offers to forget the saved
-  passwords and type them again; answer yes and type `prod-password`: it opens.
+- [ ] **Forget Saved Passwords**, open `prod_api_key` again and type a wrong password: a dialog says the saved password of `prod`
+  is wrong and offers to type it again; answer yes and type `prod-password`: it opens. Answer no instead: nothing happens.
 
 ### Errors (`broken/broken.yml`)
 
-- [ ] `wrong_password`: an error **notification** (not a dialog) "No vault password could decrypt...", with a **Vault password settings** link that opens the settings.
+- [ ] `wrong_password` (vault id `dev`, encrypted with another password): the dev password from the file fails, then prod is tried
+  (asked if not saved); then an error **notification** (not a dialog) "No vault password could decrypt vault id 'dev'", with a
+  **Vault password settings** link that opens the settings. No offer to forget passwords: the dev one comes from a file.
 - [ ] `unsupported_cypher`: notification "Unsupported vault cypher 'AES'".
 - [ ] `not_hex`: notification about malformed data.
 

@@ -91,8 +91,8 @@ vault_encrypt_identity = dev
 
 **Passwords.** For each vault id the password is read from its file; `prompt` passwords (and the password asked when nothing
 is configured) are requested once, in a single dialog, and saved in the IDE credential store. To decrypt, the password of the
-vault's own vault id is tried first, then the others (only its own with `vault_id_match`); to encrypt, only the password of
-the encrypt vault id is needed.
+vault's own vault id is used first, then the others are tried (only its own with `vault_id_match`), asking them only when
+needed; to encrypt, only the password of the encrypt vault id is needed.
 
 **Vault ids.** Vaults encrypted with the `default` vault id are written as `$ANSIBLE_VAULT;1.1;AES256`, any other vault id as
 `$ANSIBLE_VAULT;1.2;AES256;<vault id>`. With several vault ids the one used to encrypt comes from the project setting
@@ -112,8 +112,8 @@ the encrypt vault id is needed.
 
 ### Troubleshooting
 
-- **"HMAC Digest doesn't match - possibly it's the wrong password"**: the password of that vault id is wrong. If it was saved by the
-  plugin you are offered to forget it and type it again; otherwise check the password file shown in the settings tree.
+- **"No vault password could decrypt vault id ..."**: the password of that vault id is wrong. If it is the one saved by the
+  plugin you are offered to forget it and type it again; if it comes from a file, check the file shown in the settings tree.
 - **"Multiple vault ids (...): choose the one to encrypt with"**: set `vault_encrypt_identity`, or the vault id in the settings.
 - **Environment variables are ignored**: the IDE sees the environment it was started with. On macOS an IDE started from the Dock
   does not get the variables of your shell: start it from a terminal, or put the settings in `ansible.cfg`.
