@@ -1,0 +1,25 @@
+# Checks that ansible can still read every vault after editing them with the plugin:
+#   ansible-playbook site.yml          (asks the prod password: prod-password)
+- name: Show the decrypted values
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Properties (group_vars/all/vars.yml)
+      ansible.builtin.debug:
+        msg:
+          db_password: "{{ app.db_password }}"
+          quoted_double: "{{ app.quoted_double }}"
+          quoted_single: "{{ app.quoted_single }}"
+          alice_token: "{{ app.users[0].token }}"
+          api_key: "{{ app.api_key }}"
+          prod_api_key: "{{ app.prod_api_key }}"
+          legacy_token: "{{ app.legacy_token }}"
+          strip_chomping: "{{ app.strip_chomping }}"
+          nested_hidden: "{{ nested.deeply.hidden }}"
+
+    - name: Whole file vaults (group_vars/all/vault.yml, vault_prod.yml)
+      ansible.builtin.debug:
+        msg:
+          root: "{{ vault_db_root_password }}"
+          users: "{{ vault_users | map(attribute='name') | list }}"
+          prod_certificate_key: "{{ vault_prod_certificate_key }}"

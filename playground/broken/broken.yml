@@ -1,0 +1,18 @@
+# Vaults that must fail with an error notification (outside group_vars: ansible does not load them).
+
+# encrypted with a password that is neither dev nor prod: 'wrong password' (HMAC mismatch)
+wrong_password: !vault |
+          $ANSIBLE_VAULT;1.2;AES256;dev
+          38366361623939636639393664376133303430663934663763663664346434386538616637386562
+          3430656362356634663538363163366266643464623530630a633061643064393136353333353531
+          32666232613431636464636636353661373538346261393730653366333164343131363336393763
+          3435313730396463630a393664623561613334643637386666623461343364646466666530393733
+          3032
+# unsupported cypher
+unsupported_cypher: !vault |
+  $ANSIBLE_VAULT;1.1;AES
+  3030
+# not hexadecimal
+not_hex: !vault |
+  $ANSIBLE_VAULT;1.1;AES256
+  zz

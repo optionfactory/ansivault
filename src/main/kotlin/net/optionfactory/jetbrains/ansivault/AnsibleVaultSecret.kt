@@ -37,13 +37,15 @@ class AnsibleVaultSecret(
 
         /**
          * The passwords of the project, read from their files or the credential store, asking the missing ones.
-         * With [forEncryption] only the password of the vault id used to encrypt is needed (and asked).
+         * With [forEncryption] only the password of the vault id used to encrypt is needed (and asked),
+         * with [vaultId] only the password of that vault id; all of them when that vault id has no password source.
          */
-        fun search(project: Project, forEncryption: Boolean = false): AnsibleVaultSecret? {
+        fun search(project: Project, forEncryption: Boolean = false, vaultId: String? = null): AnsibleVaultSecret? {
             val lookup = VaultLookup.resolve(project)
             val encryptVaultId = lookup.encryptVaultId?.vaultId
+            val wanted = if (forEncryption) encryptVaultId else vaultId
             val needed = lookup.sources
-                .filter { !forEncryption || it.vaultId == encryptVaultId }
+                .filter { wanted == null || it.vaultId == wanted }
                 .ifEmpty { lookup.sources }
             val passwords = linkedMapOf<String, String>()
             val toAsk = mutableListOf<String>()
