@@ -8,7 +8,14 @@ object VaultLookupTree {
 
     enum class Kind { GROUP, OK, INFO, WARNING, UNUSED }
 
-    data class Node(val text: String, val detail: String? = null, val kind: Kind, val children: List<Node> = emptyList())
+    data class Node(
+        val text: String,
+        val detail: String? = null,
+        val kind: Kind,
+        val children: List<Node> = emptyList(),
+        /** The vault id whose password is saved in the credential store and can be forgotten from this node. */
+        val savedVaultId: String? = null,
+    )
 
     /** [shorten] makes the paths in the texts shorter, see [pathShortener]. */
     fun build(lookup: VaultLookup, shorten: (String) -> String = { it }): List<Node> {
@@ -64,6 +71,7 @@ object VaultLookupTree {
                 "Vault id '${source.vaultId}': $text",
                 source.definedBy?.let { "from $it" } ?: "nothing configured",
                 kind,
+                savedVaultId = source.vaultId.takeIf { source.saved },
             )
         }
         val detail = if (lookup.vaultIdMatch) "vault_id_match: a vault is decrypted only with the password of its vault id" else "tried in this order"

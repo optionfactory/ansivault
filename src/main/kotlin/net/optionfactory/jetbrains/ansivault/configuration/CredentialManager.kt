@@ -28,6 +28,11 @@ class CredentialManager {
             return knownVaultIds(project).any { getPassword(project, it) != null }
         }
 
+        fun deletePassword(project: Project, vaultId: String) {
+            PasswordSafe.instance.set(attributes(project, vaultId), null)
+            VaultSettings.getInstance(project).state.savedVaultIds.remove(vaultId)
+        }
+
         fun deletePasswords(project: Project) {
             knownVaultIds(project).forEach { PasswordSafe.instance.set(attributes(project, it), null) }
             VaultSettings.getInstance(project).state.savedVaultIds.clear()

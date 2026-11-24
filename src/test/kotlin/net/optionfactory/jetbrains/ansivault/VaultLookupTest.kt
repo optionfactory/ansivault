@@ -99,6 +99,8 @@ class VaultLookupTest {
         val passwords = tree[2].children
         assertEquals(VaultLookupTree.Kind.OK, passwords[0].kind)
         assertTrue(passwords[0].text, passwords[0].text.contains("saved in the IDE credential store"))
+        assertEquals("a", passwords[0].savedVaultId)
+        assertNull("not saved: nothing to forget", passwords[1].savedVaultId)
         assertEquals(VaultLookupTree.Kind.WARNING, passwords[1].kind)
         assertTrue(passwords[1].text, passwords[1].text.contains("not found"))
         assertEquals(VaultLookupTree.Kind.WARNING, tree[3].children.single().kind)
