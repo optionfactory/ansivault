@@ -109,7 +109,7 @@
 ### Verified
 - Plugin Verifier: compatible, with no deprecated, experimental, internal or override-only API usages, with IC 2024.3.7.1, 2025.1.7.2, 2025.2.6.4 and IU 2025.3.6.2, 2026.1.5.1, 2026.2.5, 2026.3
 
-## [Unreleased]
+## [0.0.16]
 ### Added
 - Keyboard shortcut <kbd>Ctrl+Alt+Shift+A</kbd> (<kbd>⌘⌥⇧A</kbd> on macOS) and editor context menu entry for "Ansible Vault Encrypt/Decrypt"
 - Without a selection the action works on the caret line: on a vault it opens the vault editor, on a `key: value` YAML line it encrypts the value as an inline vault (quotes and trailing comments handled)
@@ -129,3 +129,6 @@
 - "Ansible Encrypt" is now "Ansible Vault Encrypt/Decrypt"
 ### Build
 - `-PverifyIde` reports a malformed value instead of failing with an index error
+
+## [Unreleased]
+### In development
